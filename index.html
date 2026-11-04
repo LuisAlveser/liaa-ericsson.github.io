@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="pt">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LIAA - Sistema de Detecção de Intrusão (NIDS)</title>
+    <!-- Tailwind CSS para um visual moderno e responsivo -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Mermaid.js para renderização automática de diagramas C4 e Fluxogramas -->
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true, theme: 'neutral' });
+    </script>
+</head>
+
+<body class="bg-slate-50 text-slate-800 font-sans leading-relaxed">
+
+    <!-- Header / Hero Section -->
+    <header class="bg-slate-900 text-white py-16 px-6 text-center shadow-lg">
+        <div class="max-w-4xl mx-auto">
+            <span class="bg-indigo-600 text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider">LIAA •
+                Laboratório de Inteligência Artificial Aplicada</span>
+            <h1 class="text-4xl md:text-5xl font-extrabold mt-4">Detecção de Intrusão em Redes com Machine Learning</h1>
+            <p class="mt-3 text-lg text-slate-300">Análise de tráfego em grande escala, engenharia de dados e
+                classificação de ciberataques utilizando CSE-CIC-IDS2018.</p>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-6xl mx-auto px-6 py-10 space-y-12">
+
+        <!-- 1. Contexto & Problema -->
+        <section class="bg-white p-8 rounded-xl shadow-md border border-slate-100">
+            <h2 class="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+                <span class="text-indigo-600">01.</span> Contexto & Problema
+            </h2>
+            <div class="space-y-4 text-slate-600">
+                <p>
+                    A segurança de redes corporativas exige monitoramento contínuo contra ameaças avançadas. O projeto
+                    baseia-se na infraestrutura simulada do dataset <strong>CSE-CIC-IDS2018</strong>, que contempla uma
+                    organização com 5 departamentos, 420 máquinas, 30 servidores e 50 máquinas atacantes[cite: 1].
+                </p>
+                <div class="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-lg">
+                    <h4 class="font-semibold text-amber-900">O Grande Desafio (Big Data & Desbalanceamento):</h4>
+                    <p class="text-sm text-amber-800 mt-1">
+                        O dataset bruto possui aproximadamente <strong>16,1 milhões de registros</strong>[cite: 10, 16],
+                        contendo milhões de instâncias de tráfego legítimo (<em>Benign</em>) em contraste com classes
+                        raras de ataques (como <em>SQL Injection</em>, <em>FTP-Brute Force</em> e <em>XSS</em>). Além
+                        disso, o processamento direto estouraria a memória RAM padrão (limite de 12.7 GB do Google
+                        Colab)[cite: 16, 20].
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. Proposta de Solução -->
+        <section class="bg-white p-8 rounded-xl shadow-md border border-slate-100">
+            <h2 class="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+                <span class="text-indigo-600">02.</span> Proposta de Solução
+            </h2>
+            <p class="text-slate-600 mb-6">
+                Para viabilizar o treinamento eficiente dos modelos de Machine Learning sem perder a integridade dos
+                dados, a solução implementou uma pipeline estruturada:
+            </p>
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="bg-slate-50 p-5 rounded-lg border border-slate-200">
+                    <h3 class="font-bold text-slate-800 mb-2">🗄️ Manipulação com DuckDB</h3>
+                    <p class="text-sm text-slate-600">Uso do DuckDB para manipular os 16,1M de registros no Google
+                        Colab, convertendo tipos e realizando partições sem sobrecarregar a RAM[cite: 16].</p>
+                </div>
+                <div class="bg-slate-50 p-5 rounded-lg border border-slate-200">
+                    <h3 class="font-bold text-slate-800 mb-2">🧹 Deduplicação Temporal</h3>
+                    <p class="text-sm text-slate-600">Limpeza de ruídos, remoção de colunas constantes e deduplicação
+                        global respeitando a ordem cronológica via <em>Timestamp</em>[cite: 10, 20, 29].</p>
+                </div>
+                <div class="bg-slate-50 p-5 rounded-lg border border-slate-200">
+                    <h3 class="font-bold text-slate-800 mb-2">🌲 Random Forest Robusto</h3>
+                    <p class="text-sm text-slate-600">Uso de sub-amostragem bootstrap (<code
+                            class="text-xs bg-slate-200 p-1 rounded">max_samples=0.2</code>) e validação cruzada com
+                        múltiplas sementes (F1-Score Macro de <strong>0,9864</strong>)[cite: 17, 31].</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. Arquitetura (C4 Model & Fluxograma) -->
+        <section class="bg-white p-8 rounded-xl shadow-md border border-slate-100">
+            <h2 class="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+                <span class="text-indigo-600">03.</span> Arquitetura e Modelagem do Sistema
+            </h2>
+            <p class="text-slate-600 mb-6">Abaixo estão representados o diagrama de arquitetura utilizando o padrão
+                <strong>C4 Model (Nível de Containers)</strong> e o fluxograma operacional do pipeline de dados.</p>
+
+            <!-- Diagrama C4 Container via Mermaid -->
+            <div class="mb-8">
+                <h3 class="font-semibold text-slate-700 mb-3">Diagrama C4 — Containers da Solução</h3>
+                <div
+                    class="mermaid flex justify-center bg-slate-50 p-4 rounded-lg border border-slate-200 overflow-x-auto">
+                    C4Container
+                    title Diagrama de Containers - Sistema NIDS (CSE-CIC-IDS2018)
+
+                    Person(analyst, "Cibercientista / Analista", "Gerencia o pipeline e avalia métricas")
+
+                    System_Boundary(c1, "Ambiente de Processamento (Google Colab / Local)") {
+                    Container(notebook, "Jupyter Notebook / Python", "Pandas, Scikit-Learn", "Orquestra o
+                    pré-processamento e treino")
+                    ContainerDb(duckdb, "DuckDB Engine", "SQL / Parquet", "Manipula e filtra 16.1M de linhas via
+                    otimização de RAM")
+                    Container(models, "Modelos ML", "Random Forest / Regressão Logística", "Treinamento estocástico com
+                    múltiplas sementes")
+                    }
+
+                    Rel(analyst, notebook, "Executa scripts e define hiperparâmetros", "HTTPS")
+                    Rel(notebook, duckdb, "Consulta e particiona dados", "SQL / Parquet")
+                    Rel(notebook, models, "Alimenta dados de Treino/Validação/Teste", "Arrays Numpy")
+                </div>
+            </div>
+
+            <!-- Fluxograma Operacional via Mermaid -->
+            <div>
+                <h3 class="font-semibold text-slate-700 mb-3">Fluxograma — Pipeline de Engenharia e Avaliação de Modelos
+                </h3>
+                <div
+                    class="mermaid flex justify-center bg-slate-50 p-4 rounded-lg border border-slate-200 overflow-x-auto">
+                    graph TD
+                    A[Dataset Bruto: CIC-IDS-2018] --> B[Conversão float64 para float32 & Limpeza NaN/Inf]
+                    B --> C[Deduplicação Global & Remoção de Colunas Constantes]
+                    C --> D[Partição Temporal: 70% Treino, 15% Validação, 15% Teste]
+                    D --> E{Escolha do Modelo}
+                    E -->|Regressão Logística| F[Otimizador SAG / Ajuste de C]
+                    E -->|Random Forest| G[Bootstrap Sub-sampling max_samples=0.2 & 3 Sementes]
+                    F --> H[Avaliação de Métricas: F1-Score, Recall, Precision]
+                    G --> H
+                    H --> I[Identificação de Gargalos: Dificuldade em Infiltration]
+                    I --> J[Próximo Passo: Redes Neurais Profundas]
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. Resultados e Comparativo de Algoritmos (Gemini vs. Claude) -->
+        <section class="bg-white p-8 rounded-xl shadow-md border border-slate-100">
+            <h2 class="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+                <span class="text-indigo-600">04.</span> Resultados e Comparativo de Algoritmos (Gemini vs. Claude)
+            </h2>
+            <p class="text-slate-600 mb-6">
+                Abaixo encontram-se consolidados os desempenhos comparativos entre os modelos de <strong>Random
+                    Forest</strong> e <strong>Regressão Logística</strong> configurados através das recomendações das
+                IAs (Gemini e Claude)[cite: 34, 36].
+            </p>
+
+            <!-- Tabela 1: Desempenho Geral -->
+            <div class="mb-8">
+                <h3 class="font-semibold text-slate-800 mb-3">Desempenho Geral por Algoritmo e Execução[cite: 36]</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-700">
+                                <th class="p-3 border">Modelo / Execução</th>
+                                <th class="p-3 border">Limiar / Parâmetro</th>
+                                <th class="p-3 border">Acurácia</th>
+                                <th class="p-3 border">Precisão (Ataque)</th>
+                                <th class="p-3 border">Recall (Ataque)</th>
+                                <th class="p-3 border">F1-Score (Ataque)</th>
+                                <th class="p-3 border">F1-Score Macro</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-200">
+                            <tr>
+                                <td class="p-3 border font-medium">Random Forest (Claude)</td>
+                                <td class="p-3 border">Ensemble[cite: 36]</td>
+                                <td class="p-3 border">99,84%[cite: 36]</td>
+                                <td class="p-3 border">98,84%[cite: 36]</td>
+                                <td class="p-3 border">96,39%[cite: 36]</td>
+                                <td class="p-3 border font-bold text-indigo-600">0,9760[cite: 36]</td>
+                                <td class="p-3 border font-bold text-indigo-600">0,9863[cite: 36]</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 border font-medium">Random Forest (Gemini)</td>
+                                <td class="p-3 border">Thresh = 0.8640[cite: 36]</td>
+                                <td class="p-3 border">99,34%[cite: 36]</td>
+                                <td class="p-3 border">99,42%[cite: 36]</td>
+                                <td class="p-3 border">95,21%[cite: 36]</td>
+                                <td class="p-3 border">0,9727[cite: 36]</td>
+                                <td class="p-3 border">0,9845[cite: 36]</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 border font-medium">Regressão Logística (Gemini)</td>
+                                <td class="p-3 border">Thresh = 0.8577[cite: 36]</td>
+                                <td class="p-3 border">97,08%[cite: 36]</td>
+                                <td class="p-3 border">90,32%[cite: 36]</td>
+                                <td class="p-3 border">85,43%[cite: 36]</td>
+                                <td class="p-3 border">0,8781[cite: 36]</td>
+                                <td class="p-3 border">0,9307[cite: 36]</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 border font-medium">Regressão Logística (Claude)</td>
+                                <td class="p-3 border">C = 0.001 (sag)[cite: 36]</td>
+                                <td class="p-3 border">94,32%[cite: 36]</td>
+                                <td class="p-3 border">69,78%[cite: 36]</td>
+                                <td class="p-3 border">95,10%[cite: 36]</td>
+                                <td class="p-3 border">0,8049[cite: 36]</td>
+                                <td class="p-3 border">0,8858[cite: 36]</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tabela 2: Ataques Críticos e Furtivos -->
+            <div class="mb-8">
+                <h3 class="font-semibold text-slate-800 mb-3">Ataques Críticos e Furtivos: Taxa de Detecção (Recall
+                    %)[cite: 37]</h3>
+                <p class="text-xs text-slate-500 mb-2">Ataques web de baixa frequência e infiltrações expõem a
+                    fragilidade da Regressão Logística[cite: 37].</p>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-700">
+                                <th class="p-3 border">Sub-Classe de Ataque</th>
+                                <th class="p-3 border">Total Amostras</th>
+                                <th class="p-3 border">RF Gemini (%)</th>
+                                <th class="p-3 border">RL Gemini (%)</th>
+                                <th class="p-3 border">RL Claude (%)</th>
+                                <th class="p-3 border">RF Claude (%)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-200">
+                            <tr>
+                                <td class="p-3 border font-medium">Brute Force - XSS</td>
+                                <td class="p-3 border">32[cite: 37]</td>
+                                <td class="p-3 border">50,00%[cite: 37]</td>
+                                <td class="p-3 border">0,00%[cite: 37]</td>
+                                <td class="p-3 border">0,00%[cite: 37]</td>
+                                <td class="p-3 border font-bold text-indigo-600">68,75%[cite: 37]</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 border font-medium">Brute Force - Web</td>
+                                <td class="p-3 border">78[cite: 37]</td>
+                                <td class="p-3 border">64,10%[cite: 37]</td>
+                                <td class="p-3 border">0,00%[cite: 37]</td>
+                                <td class="p-3 border">8,97%[cite: 37]</td>
+                                <td class="p-3 border font-bold text-indigo-600">79,49%[cite: 37]</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 border font-medium">Infiltration</td>
+                                <td class="p-3 border">7.250[cite: 37]</td>
+                                <td class="p-3 border">4,43%[cite: 37]</td>
+                                <td class="p-3 border">2,28%[cite: 37]</td>
+                                <td class="p-3 border">10,48%[cite: 37]</td>
+                                <td class="p-3 border font-bold text-indigo-600">13,67%[cite: 37]</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 border font-medium">SQL Injection</td>
+                                <td class="p-3 border">12[cite: 37]</td>
+                                <td class="p-3 border">0,00%[cite: 37]</td>
+                                <td class="p-3 border">8,33%[cite: 37]</td>
+                                <td class="p-3 border">25,00%[cite: 37]</td>
+                                <td class="p-3 border font-bold text-indigo-600">58,33%[cite: 37]</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 border font-medium">DoS Slowloris</td>
+                                <td class="p-3 border">1.360[cite: 37]</td>
+                                <td class="p-3 border">91,32%[cite: 37]</td>
+                                <td class="p-3 border">28,75%[cite: 37]</td>
+                                <td class="p-3 border font-bold text-indigo-600">99,93%[cite: 37]</td>
+                                <td class="p-3 border">99,85%[cite: 37]</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tabela 3: Ataques Massivos -->
+            <div>
+                <h3 class="font-semibold text-slate-800 mb-3">Detecção Massiva: Alta Eficiência em Todos os Modelos
+                    (Recall %)[cite: 38]</h3>
+                <p class="text-xs text-slate-500 mb-2">Padrões repetitivos e de alto tráfego são identificados com
+                    precisão próxima a 100%[cite: 38].</p>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-700">
+                                <th class="p-3 border">Sub-Classe de Ataque</th>
+                                <th class="p-3 border">Total Amostras</th>
+                                <th class="p-3 border">RF Gemini</th>
+                                <th class="p-3 border">RL Gemini</th>
+                                <th class="p-3 border">RL Claude</th>
+                                <th class="p-3 border">RF Claude</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-200">
+                            <tr>
+                                <td class="p-3 border font-medium">Bot</td>
+                                <td class="p-3 border">20.235[cite: 38]</td>
+                                <td class="p-3 border">99,55%[cite: 38]</td>
+                                <td class="p-3 border">79,63%[cite: 38]</td>
+                                <td class="p-3 border">99,29%[cite: 38]</td>
+                                <td class="p-3 border font-bold text-indigo-600">99,82%[cite: 38]</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 border font-medium">DDoS-HOIC</td>
+                                <td class="p-3 border">27.840[cite: 38]</td>
+                                <td class="p-3 border">98,66%[cite: 38]</td>
+                                <td class="p-3 border">93,60%[cite: 38]</td>
+                                <td class="p-3 border font-bold text-indigo-600">99,95%[cite: 38]</td>
+                                <td class="p-3 border">99,89%[cite: 38]</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 border font-medium">DDOS - LOIC-HTTP</td>
+                                <td class="p-3 border">80.502[cite: 38]</td>
+                                <td class="p-3 border">98,92%[cite: 38]</td>
+                                <td class="p-3 border">94,22%[cite: 38]</td>
+                                <td class="p-3 border font-bold text-indigo-600">100,00%[cite: 38]</td>
+                                <td class="p-3 border">99,97%[cite: 38]</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 border font-medium">DoS - GoldenEye</td>
+                                <td class="p-3 border">5.795[cite: 38]</td>
+                                <td class="p-3 border">99,88%[cite: 38]</td>
+                                <td class="p-3 border">57,77%[cite: 38]</td>
+                                <td class="p-3 border">89,78%[cite: 38]</td>
+                                <td class="p-3 border font-bold text-indigo-600">100,00%[cite: 38]</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 border font-medium">SSH-Bruteforce</td>
+                                <td class="p-3 border">13.166[cite: 38]</td>
+                                <td class="p-3 border">99,98%[cite: 38]</td>
+                                <td class="p-3 border">83,02%[cite: 38]</td>
+                                <td class="p-3 border font-bold text-indigo-600">100,00%[cite: 38]</td>
+                                <td class="p-3 border">99,99%[cite: 38]</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 border font-medium">DDOS-LOIC-UDP</td>
+                                <td class="p-3 border">242[cite: 38]</td>
+                                <td class="p-3 border font-bold text-indigo-600">100,00%[cite: 38]</td>
+                                <td class="p-3 border font-bold text-indigo-600">100,00%[cite: 38]</td>
+                                <td class="p-3 border font-bold text-indigo-600">100,00%[cite: 38]</td>
+                                <td class="p-3 border font-bold text-indigo-600">100,00%[cite: 38]</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. Evolução do Projeto ao Longo do Semestre -->
+        <section class="bg-white p-8 rounded-xl shadow-md border border-slate-100">
+            <h2 class="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+                <span class="text-indigo-600">05.</span> Evolução do Projeto (Linha do Tempo)
+            </h2>
+            <div class="border-l-4 border-indigo-600 pl-6 space-y-8">
+                <div>
+                    <span class="text-xs font-bold bg-indigo-100 text-indigo-800 px-2.5 py-1 rounded">Marco
+                        Inicial</span>
+                    <h3 class="text-lg font-bold text-slate-800 mt-2">Contextualização e Coleta</h3>
+                    <p class="text-sm text-slate-600 mt-1">Estudo do dataset CSE-CIC-IDS2018, mapeamento das 80+
+                        características estatísticas extraídas pelo CICFlowMeter-V3 e estruturação do ambiente em
+                        Nuvem[cite: 1].</p>
+                </div>
+                <div>
+                    <span class="text-xs font-bold bg-indigo-100 text-indigo-800 px-2.5 py-1 rounded">Marco
+                        Intermediário</span>
+                    <h3 class="text-lg font-bold text-slate-800 mt-2">Engenharia de Dados e Limpeza</h3>
+                    <p class="text-sm text-slate-600 mt-1">Resolução do problema de estouro de memória RAM com DuckDB,
+                        remoção de registros nulos/infinitos e aplicação da deduplicação global gerando o arquivo <code
+                            class="text-xs bg-slate-100 p-1 rounded">dataset_global_deduplicado.parquet</code>[cite: 10,
+                        16, 20].</p>
+                </div>
+                <div>
+                    <span class="text-xs font-bold bg-indigo-100 text-indigo-800 px-2.5 py-1 rounded">Marco Final</span>
+                    <h3 class="text-lg font-bold text-slate-800 mt-2">Validação e Consolidação de Modelos</h3>
+                    <p class="text-sm text-slate-600 mt-1">Treinamento comparativo entre Regressão Logística e Random
+                        Forest configurados por Gemini e Claude. Constatação da superioridade do Random Forest e
+                        identificação do gargalo na detecção de tráfego sutil (*Infiltration*)[cite: 34, 36, 37, 38].
+                    </p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-slate-400 text-center py-8 mt-16 text-sm">
+        <p>Desenvolvido por Ericsson Luis Gonçalves Alves • Disciplina LIAA (2026)</p>
+    </footer>
+
+</body>
+
+</html>
