@@ -1,922 +1,1155 @@
 <!DOCTYPE html>
-<html lang="pt">
+<html lang="pt-BR">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LIAA - Sistema de Detecção de Intrusão (NIDS)</title>
-    <!-- Tailwind CSS para um visual moderno e responsivo -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Mermaid.js para renderização automática de diagramas C4 e Fluxogramas -->
-    <script type="module">
-        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
-        mermaid.initialize({ startOnLoad: true, theme: 'neutral' });
-    </script>
+    <style>
+        :root {
+            --primary: #0f172a;
+            --accent: #2563eb;
+            --accent-light: #eff6ff;
+            --border: #cbd5e1;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --muted: #64748b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            padding: 2rem 1rem;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            padding: 2.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+            border: 1px solid #e2e8f0;
+        }
+
+        header {
+            border-bottom: 3px solid var(--accent);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .badge {
+            display: inline-block;
+            background: var(--primary);
+            color: #fff;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            padding: 0.35rem 0.75rem;
+            border-radius: 4px;
+            text-transform: uppercase;
+            margin-bottom: 0.75rem;
+        }
+
+        h1 {
+            font-size: 2rem;
+            color: var(--primary);
+            line-height: 1.2;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            font-size: 1.05rem;
+            color: var(--muted);
+        }
+
+        h2 {
+            font-size: 1.4rem;
+            color: var(--primary);
+            margin-top: 2.5rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.4rem;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        h2 span.num {
+            color: var(--accent);
+            font-weight: 800;
+        }
+
+        h3 {
+            font-size: 1.1rem;
+            color: var(--primary);
+            margin-top: 1.5rem;
+            margin-bottom: 0.6rem;
+        }
+
+        p {
+            margin-bottom: 1rem;
+        }
+
+        .highlight-box {
+            background: var(--accent-light);
+            border-left: 4px solid var(--accent);
+            padding: 1rem 1.25rem;
+            border-radius: 0 8px 8px 0;
+            margin: 1rem 0;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .card {
+            background: var(--bg);
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 1.25rem;
+        }
+
+        .card h4 {
+            color: var(--accent);
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0 1.5rem 0;
+            font-size: 0.9rem;
+        }
+
+        th,
+        td {
+            border: 1px solid var(--border);
+            padding: 0.6rem 0.75rem;
+            text-align: left;
+        }
+
+        th {
+            background-color: var(--primary);
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f8fafc;
+        }
+
+        .num-col {
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .diagram-box {
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin: 1.25rem 0;
+            overflow-x: auto;
+        }
+
+        .diagram-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .diagram-tag {
+            font-size: 0.75rem;
+            background: #e2e8f0;
+            color: #334155;
+            padding: 0.2rem 0.6rem;
+            border-radius: 999px;
+            font-weight: 600;
+        }
+
+        .c4-svg {
+            width: 100%;
+            min-width: 720px;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .flow-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+        }
+
+        .flow-step {
+            background: #fff;
+            border: 1px solid #cbd5e1;
+            padding: 0.6rem 1rem;
+            border-radius: 6px;
+            font-weight: 500;
+            text-align: center;
+        }
+
+        .flow-branch {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+        }
+
+        .video-wrapper {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            overflow: hidden;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            margin: 1rem 0;
+            background: #000;
+        }
+
+        .video-wrapper iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
+
+        .timeline {
+            border-left: 3px solid var(--accent);
+            padding-left: 1.25rem;
+            margin: 1rem 0;
+        }
+
+        .timeline-item {
+            margin-bottom: 1.25rem;
+        }
+
+        .timeline-item strong {
+            color: var(--accent);
+            display: block;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+        }
+
+        footer {
+            margin-top: 3rem;
+            padding-top: 1.25rem;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+            color: var(--muted);
+        }
+
+        footer a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        @media print {
+            body {
+                background: #fff;
+                padding: 0;
+            }
+
+            .container {
+                box-shadow: none;
+                border: none;
+                padding: 0;
+            }
+        }
+    </style>
 </head>
 
-<body class="bg-slate-50 text-slate-800 font-sans leading-relaxed">
+<body>
+    <div class="container">
+        <header>
+            <div class="badge">LIAA — Laboratório de Inteligência Artificial Aplicada</div>
+            <h1>Detecção de Intrusão em Redes com Machine Learning</h1>
+            <p class="subtitle">Análise de tráfego em grande escala, engenharia de dados e classificação de ciberataques
+                utilizando CSE-CIC-IDS2018.</p>
+        </header>
 
-    <!-- Header / Hero Section -->
-    <header class="bg-slate-900 text-white py-16 px-6 text-center shadow-lg">
-        <div class="max-w-4xl mx-auto">
-            <span class="bg-indigo-600 text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider">LIAA •
-                Laboratório de Inteligência Artificial Aplicada</span>
-            <h1 class="text-4xl md:text-5xl font-extrabold mt-4">Detecção de Intrusão em Redes com Machine Learning</h1>
-            <p class="mt-3 text-lg text-slate-300">Análise de tráfego em grande escala, engenharia de dados e
-                classificação de ciberataques utilizando CSE-CIC-IDS2018.</p>
-        </div>
-    </header>
+        <section>
+            <h2><span class="num">01.</span> Contexto &amp; Problema</h2>
+            <p>A segurança de redes corporativas exige monitoramento contínuo contra ameaças avançadas. O projeto
+                baseia-se na infraestrutura simulada do dataset <strong>CSE-CIC-IDS2018</strong>, que contempla uma
+                organização com 5 departamentos, 420 máquinas, 30 servidores e 50 máquinas atacantes.</p>
+            <div class="highlight-box">
+                <strong>O Grande Desafio (Big Data &amp; Desbalanceamento):</strong><br>
+                O dataset bruto possui aproximadamente 16,1 milhões de registros, contendo milhões de instâncias de
+                tráfego legítimo (<em>Benign</em>) em contraste com classes raras de ataques (como SQL Injection,
+                FTP-Brute Force e XSS). Além disso, o processamento direto estouraria a memória RAM padrão (limite de
+                12.7 GB do Google Colab).
+            </div>
+        </section>
 
-    <!-- Main Container -->
-    <main class="max-w-6xl mx-auto px-6 py-10 space-y-12">
-
-        <!-- 1. Contexto & Problema -->
-        <section class="bg-white p-8 rounded-xl shadow-md border border-slate-100">
-            <h2 class="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-2">
-                <span class="text-indigo-600">01.</span> Contexto & Problema
-            </h2>
-            <div class="space-y-4 text-slate-600">
-                <p>
-                    A segurança de redes corporativas exige monitoramento contínuo contra ameaças avançadas. O projeto
-                    baseia-se na infraestrutura simulada do dataset <strong>CSE-CIC-IDS2018</strong>, que contempla uma
-                    organização com 5 departamentos, 420 máquinas, 30 servidores e 50 máquinas atacantes.
-                </p>
-                <div class="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-lg">
-                    <h4 class="font-semibold text-amber-900">O Grande Desafio (Big Data & Desbalanceamento):</h4>
-                    <p class="text-sm text-amber-800 mt-1">
-                        O dataset bruto possui aproximadamente <strong>16,1 milhões de registros</strong>,
-                        contendo milhões de instâncias de tráfego legítimo (<em>Benign</em>) em contraste com classes
-                        raras de ataques (como <em>SQL Injection</em>, <em>FTP-Brute Force</em> e <em>XSS</em>). Além
-                        disso, o processamento direto estouraria a memória RAM padrão (limite de 12.7 GB do Google
-                        Colab).
-                    </p>
+        <section>
+            <h2><span class="num">02.</span> Proposta de Solução</h2>
+            <p>Para viabilizar o treinamento eficiente dos modelos de Machine Learning sem perder a integridade dos
+                dados, a solução implementou uma pipeline estruturada:</p>
+            <div class="grid-3">
+                <div class="card">
+                    <h4>Manipulação com DuckDB</h4>
+                    <p>Uso do DuckDB para manipular os 16,1M de registros no Google Colab, convertendo tipos e
+                        realizando partições sem sobrecarregar a RAM.</p>
+                </div>
+                <div class="card">
+                    <h4>Deduplicação Temporal</h4>
+                    <p>Limpeza de ruídos, remoção de colunas constantes e deduplicação global respeitando a ordem
+                        cronológica via <code>Timestamp</code>.</p>
+                </div>
+                <div class="card">
+                    <h4>Random Forest Robusto</h4>
+                    <p>Uso de sub-amostragem bootstrap (<code>max_samples=0.2</code>) e validação cruzada com múltiplas
+                        sementes (F1-Score Macro de 0,9863).</p>
                 </div>
             </div>
         </section>
 
-        <!-- 2. Proposta de Solução -->
-        <section class="bg-white p-8 rounded-xl shadow-md border border-slate-100">
-            <h2 class="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-2">
-                <span class="text-indigo-600">02.</span> Proposta de Solução
-            </h2>
-            <p class="text-slate-600 mb-6">
-                Para viabilizar o treinamento eficiente dos modelos de Machine Learning sem perder a integridade dos
-                dados, a solução implementou uma pipeline estruturada:
+        <section>
+            <h2><span class="num">03.</span> Engenharia de Dados, Particionamento e Auditoria</h2>
+            <p><em>Atualização / Correção 08/11 — Detalhamento metodológico da limpeza, divisão cronológica dos
+                    subconjuntos e análise de sobreposição entre classes no espaço de características numéricas.</em>
             </p>
-            <div class="grid md:grid-cols-3 gap-6">
-                <div class="bg-slate-50 p-5 rounded-lg border border-slate-200">
-                    <h3 class="font-bold text-slate-800 mb-2">🗄️ Manipulação com DuckDB</h3>
-                    <p class="text-sm text-slate-600">Uso do DuckDB para manipular os 16,1M de registros no Google
-                        Colab, convertendo tipos e realizando partições sem sobrecarregar a RAM.</p>
-                </div>
-                <div class="bg-slate-50 p-5 rounded-lg border border-slate-200">
-                    <h3 class="font-bold text-slate-800 mb-2">🧹 Deduplicação Temporal</h3>
-                    <p class="text-sm text-slate-600">Limpeza de ruídos, remoção de colunas constantes e deduplicação
-                        global respeitando a ordem cronológica via <em>Timestamp</em>.</p>
-                </div>
-                <div class="bg-slate-50 p-5 rounded-lg border border-slate-200">
-                    <h3 class="font-bold text-slate-800 mb-2">🌲 Random Forest Robusto</h3>
-                    <p class="text-sm text-slate-600">Uso de sub-amostragem bootstrap (<code
-                            class="text-xs bg-slate-200 p-1 rounded">max_samples=0.2</code>) e validação cruzada com
-                        múltiplas sementes (F1-Score Macro de <strong>0,9863</strong>).</p>
-                </div>
+
+            <h3>Dataset Deduplicado</h3>
+            <p>A deduplicação global (<code>dataset_global_deduplicado.parquet</code>) foi realizada utilizando como
+                chave as 69 características numéricas de fluxo somadas às colunas <code>Dst Port</code> e
+                <code>Label</code>, excluindo-se identificadores de rede (<code>Flow ID</code>, <code>Src IP</code>,
+                <code>Src Port</code>, <code>Dst IP</code>), as 8 colunas constantes, <code>Timestamp</code> e
+                <code>Arquivo_origem</code>.</p>
+
+            <h3>Escopo de Atributos no Treinamento</h3>
+            <p>A coluna <code>Dst Port</code> foi excluída dos conjuntos de treino, validação e teste desde a montagem,
+                junto com <code>Timestamp</code> e <code>Arquivo_origem</code>, restringindo a entrada dos algoritmos
+                estritamente às 69 métricas estatísticas de fluxo. O efeito dessa exclusão sobre o desempenho não foi
+                medido neste trabalho.</p>
+
+            <h3>Separação Temporal dos Conjuntos e Balanço da Deduplicação Global</h3>
+            <p>Os subconjuntos foram divididos em 70% dos registros mais antigos para treino, os 15% subsequentes para
+                validação e os 15% mais recentes para teste, mantendo intervalos temporais (gaps) entre os blocos para
+                evitar vazamento de contexto. Os ataques do tipo <em>Infiltration</em> do dia 01/03/2018 foram
+                reservados integralmente para o subconjunto de teste, com a finalidade de avaliar a generalização em
+                dados não vistos.</p>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Conjunto</th>
+                        <th class="num-col">Linhas</th>
+                        <th class="num-col">Proporção Alvo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Treino</td>
+                        <td class="num-col">7.173.260</td>
+                        <td class="num-col">70%</td>
+                    </tr>
+                    <tr>
+                        <td>Validação</td>
+                        <td class="num-col">1.434.654</td>
+                        <td class="num-col">15%</td>
+                    </tr>
+                    <tr>
+                        <td>Teste</td>
+                        <td class="num-col">1.496.692</td>
+                        <td class="num-col">15% (+ Infiltration 01/03)</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Etapa / Alocação</th>
+                        <th class="num-col">Total de Linhas</th>
+                        <th class="num-col">%</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Deduplicado (<code>dataset_global_deduplicado.parquet</code>)</td>
+                        <td class="num-col">10.309.558</td>
+                        <td class="num-col">100,00%</td>
+                    </tr>
+                    <tr>
+                        <td>Soma Treino + Validação + Teste</td>
+                        <td class="num-col">10.104.606</td>
+                        <td class="num-col">98,01%</td>
+                    </tr>
+                    <tr>
+                        <td>Linhas reservadas nos Gaps temporais</td>
+                        <td class="num-col">204.952</td>
+                        <td class="num-col">1,99%</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Contagem de Classes por Subconjuntos e Gaps</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Label</th>
+                        <th class="num-col">Treino</th>
+                        <th class="num-col">Validação</th>
+                        <th class="num-col">Teste</th>
+                        <th class="num-col">Total Dedup</th>
+                        <th class="num-col">Gaps</th>
+                        <th class="num-col">% nos Gaps</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>FTP-Brute Force</td>
+                        <td class="num-col">37</td>
+                        <td class="num-col">8</td>
+                        <td class="num-col">8</td>
+                        <td class="num-col">53</td>
+                        <td class="num-col">0</td>
+                        <td class="num-col">0,00%</td>
+                    </tr>
+                    <tr>
+                        <td>DoS attacks-SlowHTTPTest</td>
+                        <td class="num-col">38</td>
+                        <td class="num-col">7</td>
+                        <td class="num-col">8</td>
+                        <td class="num-col">55</td>
+                        <td class="num-col">2</td>
+                        <td class="num-col">3,64%</td>
+                    </tr>
+                    <tr>
+                        <td>SQL Injection</td>
+                        <td class="num-col">58</td>
+                        <td class="num-col">12</td>
+                        <td class="num-col">12</td>
+                        <td class="num-col">84</td>
+                        <td class="num-col">2</td>
+                        <td class="num-col">2,38%</td>
+                    </tr>
+                    <tr>
+                        <td>Brute Force -XSS</td>
+                        <td class="num-col">159</td>
+                        <td class="num-col">32</td>
+                        <td class="num-col">32</td>
+                        <td class="num-col">228</td>
+                        <td class="num-col">5</td>
+                        <td class="num-col">2,19%</td>
+                    </tr>
+                    <tr>
+                        <td>Brute Force -Web</td>
+                        <td class="num-col">387</td>
+                        <td class="num-col">78</td>
+                        <td class="num-col">78</td>
+                        <td class="num-col">553</td>
+                        <td class="num-col">10</td>
+                        <td class="num-col">1,81%</td>
+                    </tr>
+                    <tr>
+                        <td>DDOS attack-LOIC-UDP</td>
+                        <td class="num-col">1.211</td>
+                        <td class="num-col">242</td>
+                        <td class="num-col">243</td>
+                        <td class="num-col">1.730</td>
+                        <td class="num-col">34</td>
+                        <td class="num-col">1,97%</td>
+                    </tr>
+                    <tr>
+                        <td>DoS attacks-Slowloris</td>
+                        <td class="num-col">6.798</td>
+                        <td class="num-col">1.360</td>
+                        <td class="num-col">1.360</td>
+                        <td class="num-col">9.712</td>
+                        <td class="num-col">194</td>
+                        <td class="num-col">2,00%</td>
+                    </tr>
+                    <tr>
+                        <td>DoS attacks-GoldenEye</td>
+                        <td class="num-col">28.974</td>
+                        <td class="num-col">5.795</td>
+                        <td class="num-col">5.795</td>
+                        <td class="num-col">41.392</td>
+                        <td class="num-col">828</td>
+                        <td class="num-col">2,00%</td>
+                    </tr>
+                    <tr>
+                        <td>SSH-Bruteforce</td>
+                        <td class="num-col">65.833</td>
+                        <td class="num-col">13.166</td>
+                        <td class="num-col">13.167</td>
+                        <td class="num-col">94.048</td>
+                        <td class="num-col">1.882</td>
+                        <td class="num-col">2,00%</td>
+                    </tr>
+                    <tr>
+                        <td>Infilteration</td>
+                        <td class="num-col">36.249</td>
+                        <td class="num-col">7.250</td>
+                        <td class="num-col">69.284</td>
+                        <td class="num-col">113.819</td>
+                        <td class="num-col">1.036</td>
+                        <td class="num-col">0,91%</td>
+                    </tr>
+                    <tr>
+                        <td>Bot</td>
+                        <td class="num-col">101.174</td>
+                        <td class="num-col">20.235</td>
+                        <td class="num-col">20.235</td>
+                        <td class="num-col">144.535</td>
+                        <td class="num-col">2.891</td>
+                        <td class="num-col">2,00%</td>
+                    </tr>
+                    <tr>
+                        <td>DoS attacks-Hulk</td>
+                        <td class="num-col">101.639</td>
+                        <td class="num-col">20.328</td>
+                        <td class="num-col">20.328</td>
+                        <td class="num-col">145.199</td>
+                        <td class="num-col">2.904</td>
+                        <td class="num-col">2,00%</td>
+                    </tr>
+                    <tr>
+                        <td>DDOS attack-HOIC</td>
+                        <td class="num-col">139.202</td>
+                        <td class="num-col">27.840</td>
+                        <td class="num-col">27.841</td>
+                        <td class="num-col">198.861</td>
+                        <td class="num-col">3.978</td>
+                        <td class="num-col">2,00%</td>
+                    </tr>
+                    <tr>
+                        <td>DDoS attacks-LOIC-HTTP</td>
+                        <td class="num-col">402.508</td>
+                        <td class="num-col">80.502</td>
+                        <td class="num-col">80.502</td>
+                        <td class="num-col">575.012</td>
+                        <td class="num-col">11.500</td>
+                        <td class="num-col">2,00%</td>
+                    </tr>
+                    <tr>
+                        <td>Benign</td>
+                        <td class="num-col">6.288.993</td>
+                        <td class="num-col">1.257.799</td>
+                        <td class="num-col">1.257.799</td>
+                        <td class="num-col">8.984.277</td>
+                        <td class="num-col">179.686</td>
+                        <td class="num-col">2,00%</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Auditoria Multiclasse e Contagem de Conflitos (Infiltration vs. Benign)</h3>
+            <p>Ao refazer o agrupamento dentro do dataset deduplicado estritamente pelas 69 colunas numéricas utilizadas
+                como entrada pelos modelos (já sem <code>Dst Port</code> e <code>Label</code>), obteve-se a distribuição
+                de ambiguidade em todas as classes:</p>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Rótulos Distintos por Vetor</th>
+                        <th class="num-col">Vetores Únicos</th>
+                        <th class="num-col">Total de Linhas Afetadas</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>3 rótulos</td>
+                        <td class="num-col">93</td>
+                        <td class="num-col">279</td>
+                    </tr>
+                    <tr>
+                        <td>2 rótulos</td>
+                        <td class="num-col">62.060</td>
+                        <td class="num-col">124.120</td>
+                    </tr>
+                    <tr>
+                        <td>1 rótulo (sem conflito)</td>
+                        <td class="num-col">10.185.159</td>
+                        <td class="num-col">10.185.159</td>
+                    </tr>
+                    <tr>
+                        <td><strong>TOTAL</strong></td>
+                        <td class="num-col"><strong>10.247.312</strong></td>
+                        <td class="num-col"><strong>10.309.558</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="highlight-box">
+                <strong>Diagnóstico do Gargalo em Infiltration:</strong> Dos 62.060 vetores com dois rótulos distintos,
+                61.508 contêm exclusivamente <em>Benign</em> e <em>Infiltration</em> (123.016 linhas). Outros 85 vetores
+                que contêm ambos aparecem com um terceiro rótulo (255 linhas), totalizando 61.593 vetores e 123.271
+                linhas envolvendo o par. No conjunto de treino, são <strong>9.914 vetores conflitantes</strong> (9.914
+                linhas de Infiltration afetadas, equivalente a <strong>27,35%</strong> do treino).
             </div>
         </section>
 
-        <!-- 3. Engenharia de Dados, Particionamento e Auditoria -->
-        <section class="bg-white p-8 rounded-xl shadow-md border border-slate-100 space-y-8">
-            <div>
-                <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
-                    <h2 class="text-2xl font-bold text-slate-900 flex items-center gap-2">
-                        <span class="text-indigo-600">03.</span> Engenharia de Dados, Particionamento e Auditoria
-                    </h2>
-                    <span class="bg-indigo-100 text-indigo-800 text-xs font-semibold px-3 py-1 rounded-full">
-                        Atualização / Correção 08/11
-                    </span>
+        <section>
+            <h2><span class="num">04.</span> Arquitetura e Modelagem do Sistema</h2>
+            <p>Abaixo estão representados o diagrama de arquitetura utilizando o padrão <strong>C4 Model (Nível 2 —
+                    Containers)</strong> e o fluxograma operacional do pipeline de dados.</p>
+
+            <!-- DIAGRAMA C4 CONTAINERS VETORIAL (SVG) -->
+            <div class="diagram-box">
+                <div class="diagram-title">
+                    <span>Diagrama de Containers (C4 Model) — Sistema NIDS (CSE-CIC-IDS2018)</span>
+                    <span class="diagram-tag">Nível 2: Containers</span>
                 </div>
-                <p class="text-slate-600">
-                    Detalhamento metodológico da limpeza, divisão cronológica dos subconjuntos e análise de
-                    sobreposição entre classes no espaço de características numéricas.
-                </p>
+
+                <svg class="c4-svg" viewBox="0 0 920 530" xmlns="http://www.w3.org/2000/svg" role="img"
+                    aria-label="Diagrama C4 Containers do Sistema NIDS">
+                    <defs>
+                        <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7"
+                            orient="auto-start-reverse">
+                            <path d="M 0 1 L 10 5 L 0 9 z" fill="#475569" />
+                        </marker>
+                    </defs>
+
+                    <!-- PESSOA: Cibercientista / Analista -->
+                    <g transform="translate(80, 15)">
+                        <!-- Cabeça e tronco estilizados C4 Person -->
+                        <circle cx="115" cy="24" r="18" fill="#08427b" />
+                        <rect x="0" y="38" width="230" height="118" rx="14" fill="#08427b" stroke="#052e56"
+                            stroke-width="2" />
+                        <text x="115" y="64" text-anchor="middle" fill="#ffffff" font-size="14"
+                            font-weight="700">Cibercientista / Analista</text>
+                        <text x="115" y="81" text-anchor="middle" fill="#bae6fd" font-size="11">[Person]</text>
+                        <text x="115" y="106" text-anchor="middle" fill="#f1f5f9" font-size="11">Gerencia o pipeline,
+                            define</text>
+                        <text x="115" y="121" text-anchor="middle" fill="#f1f5f9" font-size="11">hiperparâmetros e
+                            avalia</text>
+                        <text x="115" y="136" text-anchor="middle" fill="#f1f5f9" font-size="11">métricas de
+                            detecção.</text>
+                    </g>
+
+                    <!-- SISTEMA EXTERNO: Dataset CSE-CIC-IDS2018 -->
+                    <g transform="translate(590, 48)">
+                        <rect x="0" y="0" width="250" height="118" rx="10" fill="#64748b" stroke="#475569"
+                            stroke-width="2" />
+                        <text x="125" y="26" text-anchor="middle" fill="#ffffff" font-size="14"
+                            font-weight="700">Dataset CSE-CIC-IDS2018</text>
+                        <text x="125" y="43" text-anchor="middle" fill="#e2e8f0" font-size="11">[External Data Source /
+                            CSV]</text>
+                        <text x="125" y="68" text-anchor="middle" fill="#f8fafc" font-size="11">16,1M de fluxos de rede
+                            extraídos</text>
+                        <text x="125" y="83" text-anchor="middle" fill="#f8fafc" font-size="11">via CICFlowMeter-V3 (5
+                            depts,</text>
+                        <text x="125" y="98" text-anchor="middle" fill="#f8fafc" font-size="11">420 máquinas, 14 tipos
+                            de ataque).</text>
+                    </g>
+
+                    <!-- SYSTEM BOUNDARY: Ambiente de Processamento -->
+                    <rect x="25" y="235" width="870" height="275" rx="12" fill="#f1f5f9" stroke="#64748b"
+                        stroke-width="2" stroke-dasharray="7 5" />
+                    <text x="42" y="260" fill="#1e293b" font-size="13" font-weight="700">Ambiente de Processamento
+                        (Google Colab / Local)</text>
+                    <text x="42" y="276" fill="#64748b" font-size="11">[Software System Boundary — Limite 12.7 GB
+                        RAM]</text>
+
+                    <!-- CONTAINER 1: Jupyter Notebook / Python -->
+                    <g transform="translate(45, 298)">
+                        <rect x="0" y="0" width="245" height="175" rx="10" fill="#2563eb" stroke="#1d4ed8"
+                            stroke-width="2" />
+                        <text x="122" y="28" text-anchor="middle" fill="#ffffff" font-size="14"
+                            font-weight="700">Jupyter Notebook / Python</text>
+                        <text x="122" y="46" text-anchor="middle" fill="#dbeafe" font-size="11">[Container: Pandas,
+                            Scikit-Learn]</text>
+                        <text x="122" y="75" text-anchor="middle" fill="#ffffff" font-size="11">Orquestra a conversão
+                            float32,</text>
+                        <text x="122" y="91" text-anchor="middle" fill="#ffffff" font-size="11">limpeza de NaN/Inf,
+                            remoção de</text>
+                        <text x="122" y="107" text-anchor="middle" fill="#ffffff" font-size="11">atributos de rede e
+                            auditoria</text>
+                        <text x="122" y="123" text-anchor="middle" fill="#ffffff" font-size="11">multiclasse de
+                            colisões.</text>
+                    </g>
+
+                    <!-- CONTAINER DB: DuckDB Engine -->
+                    <g transform="translate(345, 298)">
+                        <!-- Cilindro Database C4 -->
+                        <path d="M 0 22 C 0 8, 230 8, 230 22 L 230 153 C 230 167, 0 167, 0 153 Z" fill="#1d4ed8"
+                            stroke="#1e3a8a" stroke-width="2" />
+                        <ellipse cx="115" cy="22" rx="115" ry="14" fill="#3b82f6" stroke="#1e3a8a" stroke-width="2" />
+                        <text x="115" y="54" text-anchor="middle" fill="#ffffff" font-size="14" font-weight="700">DuckDB
+                            Engine</text>
+                        <text x="115" y="71" text-anchor="middle" fill="#dbeafe" font-size="11">[Container DB: SQL /
+                            Parquet]</text>
+                        <text x="115" y="96" text-anchor="middle" fill="#ffffff" font-size="11">Deduplica 16,1M &rarr;
+                            10,3M linhas</text>
+                        <text x="115" y="112" text-anchor="middle" fill="#ffffff" font-size="11">sem estourar RAM e
+                            aplica</text>
+                        <text x="115" y="128" text-anchor="middle" fill="#ffffff" font-size="11">partição temporal
+                            (70/15/15)</text>
+                        <text x="115" y="144" text-anchor="middle" fill="#ffffff" font-size="11">com gaps
+                            cronológicos.</text>
+                    </g>
+
+                    <!-- CONTAINER 3: Modelos ML -->
+                    <g transform="translate(630, 298)">
+                        <rect x="0" y="0" width="245" height="175" rx="10" fill="#2563eb" stroke="#1d4ed8"
+                            stroke-width="2" />
+                        <text x="122" y="28" text-anchor="middle" fill="#ffffff" font-size="14"
+                            font-weight="700">Modelos ML</text>
+                        <text x="122" y="46" text-anchor="middle" fill="#dbeafe" font-size="11">[Container: RF &amp;
+                            Reg. Logística]</text>
+                        <text x="122" y="75" text-anchor="middle" fill="#ffffff" font-size="11">Treinamento estocástico
+                            em</text>
+                        <text x="122" y="91" text-anchor="middle" fill="#ffffff" font-size="11">69 features numéricas
+                            com</text>
+                        <text x="122" y="107" text-anchor="middle" fill="#ffffff" font-size="11">sub-amostragem
+                            (max_samples=0.2)</text>
+                        <text x="122" y="123" text-anchor="middle" fill="#ffffff" font-size="11">e ensemble de 3
+                            sementes.</text>
+                    </g>
+
+                    <!-- SETAS E RELACIONAMENTOS -->
+                    <!-- Analista -> Jupyter -->
+                    <line x1="175" y1="171" x2="175" y2="294" stroke="#475569" stroke-width="2"
+                        marker-end="url(#arrow)" />
+                    <rect x="65" y="192" width="220" height="32" rx="4" fill="#ffffff" stroke="#cbd5e1" />
+                    <text x="175" y="206" text-anchor="middle" fill="#1e293b" font-size="10.5" font-weight="600">Executa
+                        scripts e calibra limiares</text>
+                    <text x="175" y="219" text-anchor="middle" fill="#64748b" font-size="10">[HTTPS / Browser]</text>
+
+                    <!-- Dataset -> DuckDB -->
+                    <line x1="650" y1="166" x2="505" y2="295" stroke="#475569" stroke-width="2"
+                        marker-end="url(#arrow)" />
+                    <rect x="485" y="192" width="215" height="32" rx="4" fill="#ffffff" stroke="#cbd5e1" />
+                    <text x="592" y="206" text-anchor="middle" fill="#1e293b" font-size="10.5"
+                        font-weight="600">Ingestão bruta de logs de fluxo</text>
+                    <text x="592" y="219" text-anchor="middle" fill="#64748b" font-size="10">[Leitura em disco /
+                        Parquet]</text>
+
+                    <!-- Jupyter <-> DuckDB -->
+                    <line x1="290" y1="385" x2="341" y2="385" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"
+                        marker-start="url(#arrow)" />
+                    <rect x="276" y="410" width="84" height="30" rx="4" fill="#ffffff" stroke="#cbd5e1" />
+                    <text x="318" y="423" text-anchor="middle" fill="#1e293b" font-size="9.5" font-weight="600">Consulta
+                        SQL</text>
+                    <text x="318" y="435" text-anchor="middle" fill="#64748b" font-size="9">[In-Process]</text>
+
+                    <!-- DuckDB -> Modelos ML -->
+                    <line x1="575" y1="385" x2="626" y2="385" stroke="#475569" stroke-width="2"
+                        marker-end="url(#arrow)" />
+                    <rect x="556" y="410" width="92" height="30" rx="4" fill="#ffffff" stroke="#cbd5e1" />
+                    <text x="602" y="423" text-anchor="middle" fill="#1e293b" font-size="9.5"
+                        font-weight="600">Treino/Val/Teste</text>
+                    <text x="602" y="435" text-anchor="middle" fill="#64748b" font-size="9">[Arrays Numpy]</text>
+                </svg>
             </div>
 
-            <!-- Regras de Deduplicação e Features de Treinamento -->
-            <div class="grid md:grid-cols-2 gap-6">
-                <div class="bg-slate-50 p-5 rounded-lg border border-slate-200">
-                    <h3 class="font-bold text-slate-800 mb-2">Dataset Deduplicado</h3>
-                    <p class="text-sm text-slate-600 leading-relaxed">
-                        A deduplicação global (<code
-                            class="text-xs bg-slate-200 px-1.5 py-0.5 rounded">dataset_global_deduplicado.parquet</code>)
-                        foi realizada utilizando como chave as <strong>69 características numéricas de fluxo</strong>
-                        somadas às colunas <code class="text-xs bg-slate-200 px-1.5 py-0.5 rounded">Dst Port</code> e
-                        <code class="text-xs bg-slate-200 px-1.5 py-0.5 rounded">Label</code>, excluindo-se
-                        identificadores de rede (<code
-                            class="text-xs bg-slate-200 px-1.5 py-0.5 rounded">Flow ID</code>,
-                        <code class="text-xs bg-slate-200 px-1.5 py-0.5 rounded">Src IP</code>,
-                        <code class="text-xs bg-slate-200 px-1.5 py-0.5 rounded">Src Port</code>,
-                        <code class="text-xs bg-slate-200 px-1.5 py-0.5 rounded">Dst IP</code>), as 8 colunas
-                        constantes,
-                        <code class="text-xs bg-slate-200 px-1.5 py-0.5 rounded">Timestamp</code> e
-                        <code class="text-xs bg-slate-200 px-1.5 py-0.5 rounded">Arquivo_origem</code>.
-                    </p>
+            <div class="diagram-box">
+                <div class="diagram-title">
+                    <span>Fluxograma — Pipeline de Engenharia e Avaliação de Modelos</span>
+                    <span class="diagram-tag">Fluxo de Dados</span>
                 </div>
-
-                <div class="bg-slate-50 p-5 rounded-lg border border-slate-200">
-                    <h3 class="font-bold text-slate-800 mb-2">Escopo de Atributos no Treinamento</h3>
-                    <p class="text-sm text-slate-600 leading-relaxed">
-                        A coluna <code class="text-xs bg-slate-200 px-1.5 py-0.5 rounded">Dst Port</code> foi excluída
-                        dos conjuntos de treino, validação e teste desde a montagem, junto com
-                        <code class="text-xs bg-slate-200 px-1.5 py-0.5 rounded">Timestamp</code> e
-                        <code class="text-xs bg-slate-200 px-1.5 py-0.5 rounded">Arquivo_origem</code>, restringindo a
-                        entrada dos algoritmos estritamente às 69 métricas estatísticas de fluxo. O efeito dessa
-                        exclusão sobre o desempenho não foi medido neste trabalho.
-                    </p>
-                </div>
-            </div>
-
-            <!-- Separação dos Conjuntos e Balanço da Deduplicação -->
-            <div>
-                <h3 class="font-semibold text-slate-800 mb-2">Separação Temporal dos Conjuntos e Balanço da Deduplicação
-                    Global</h3>
-                <p class="text-sm text-slate-600 mb-4">
-                    Os subconjuntos foram divididos em <strong>70%</strong> dos registros mais antigos para treino, os
-                    <strong>15%</strong> subsequentes para validação e os <strong>15%</strong> mais recentes para teste,
-                    mantendo intervalos temporais (<em>gaps</em>) entre os blocos para evitar vazamento de contexto. Os
-                    ataques do tipo <em>Infiltration</em> do dia <strong>01/03/2018</strong> foram reservados
-                    integralmente para o subconjunto de teste, com a finalidade de avaliar a generalização em dados
-                    não vistos.
-                </p>
-
-                <div class="grid md:grid-cols-2 gap-6 mb-4 items-start">
-                    <!-- Tabela de Partição -->
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse text-sm">
-                            <thead>
-                                <tr class="bg-slate-100 text-slate-700">
-                                    <th class="p-2.5 border">Conjunto</th>
-                                    <th class="p-2.5 border text-right">Linhas</th>
-                                    <th class="p-2.5 border text-right">Proporção Alvo</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-200">
-                                <tr>
-                                    <td class="p-2.5 border font-medium">Treino</td>
-                                    <td class="p-2.5 border text-right font-mono">7.173.260</td>
-                                    <td class="p-2.5 border text-right">70%</td>
-                                </tr>
-                                <tr>
-                                    <td class="p-2.5 border font-medium">Validação</td>
-                                    <td class="p-2.5 border text-right font-mono">1.434.654</td>
-                                    <td class="p-2.5 border text-right">15%</td>
-                                </tr>
-                                <tr>
-                                    <td class="p-2.5 border font-medium">Teste</td>
-                                    <td class="p-2.5 border text-right font-mono">1.496.692</td>
-                                    <td class="p-2.5 border text-right">15% (+ Infiltration 01/03)</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- Tabela de Balanço da Deduplicação Global -->
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse text-sm">
-                            <thead>
-                                <tr class="bg-slate-100 text-slate-700">
-                                    <th class="p-2.5 border">Etapa / Alocação</th>
-                                    <th class="p-2.5 border text-right">Total de Linhas</th>
-                                    <th class="p-2.5 border text-right">%</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-200">
-                                <tr class="font-semibold bg-slate-50">
-                                    <td class="p-2.5 border">Deduplicado (<code
-                                            class="text-xs">dataset_global_deduplicado.parquet</code>)</td>
-                                    <td class="p-2.5 border text-right font-mono">10.309.558</td>
-                                    <td class="p-2.5 border text-right">100,00%</td>
-                                </tr>
-                                <tr>
-                                    <td class="p-2.5 border">Soma Treino + Validação + Teste</td>
-                                    <td class="p-2.5 border text-right font-mono">10.104.606</td>
-                                    <td class="p-2.5 border text-right">98,01%</td>
-                                </tr>
-                                <tr class="text-indigo-900 bg-indigo-50/50">
-                                    <td class="p-2.5 border font-medium">Linhas reservadas nos Gaps temporais</td>
-                                    <td class="p-2.5 border text-right font-mono font-semibold">204.952</td>
-                                    <td class="p-2.5 border text-right font-semibold">1,99%</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <p class="text-sm text-slate-600 bg-slate-50 p-3.5 rounded-lg border border-slate-200 mb-6">
-                    Das <strong>10.309.558</strong> linhas do dataset deduplicado, <strong>10.104.606 (98,01%)</strong>
-                    foram alocadas aos conjuntos de treino, validação e teste, e <strong>204.952 (1,99%)</strong> foram
-                    reservadas como intervalos temporais entre os blocos para reduzir a dependência entre fluxos
-                    vizinhos. Não houve descarte além desses intervalos.
-                </p>
-
-                <!-- Contagem de Classes por Subconjuntos -->
-                <h4 class="font-semibold text-slate-800 mb-2 text-sm">Contagem de Classes por Subconjuntos e Gaps</h4>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse text-xs md:text-sm">
-                        <thead>
-                            <tr class="bg-slate-100 text-slate-700">
-                                <th class="p-2.5 border">Label</th>
-                                <th class="p-2.5 border text-right">Treino</th>
-                                <th class="p-2.5 border text-right">Validação</th>
-                                <th class="p-2.5 border text-right">Teste</th>
-                                <th class="p-2.5 border text-right">Total Dedup</th>
-                                <th class="p-2.5 border text-right">Gaps</th>
-                                <th class="p-2.5 border text-right">% nos Gaps</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-200 font-mono text-xs">
-                            <tr>
-                                <td class="p-2.5 border font-sans font-medium">FTP-BruteForce</td>
-                                <td class="p-2.5 border text-right">37</td>
-                                <td class="p-2.5 border text-right">8</td>
-                                <td class="p-2.5 border text-right">8</td>
-                                <td class="p-2.5 border text-right">53</td>
-                                <td class="p-2.5 border text-right">0</td>
-                                <td class="p-2.5 border text-right">0,00%</td>
-                            </tr>
-                            <tr>
-                                <td class="p-2.5 border font-sans font-medium">DoS attacks-SlowHTTPTest</td>
-                                <td class="p-2.5 border text-right">38</td>
-                                <td class="p-2.5 border text-right">7</td>
-                                <td class="p-2.5 border text-right">8</td>
-                                <td class="p-2.5 border text-right">55</td>
-                                <td class="p-2.5 border text-right">2</td>
-                                <td class="p-2.5 border text-right">3,64%</td>
-                            </tr>
-                            <tr>
-                                <td class="p-2.5 border font-sans font-medium">SQL Injection</td>
-                                <td class="p-2.5 border text-right">58</td>
-                                <td class="p-2.5 border text-right">12</td>
-                                <td class="p-2.5 border text-right">12</td>
-                                <td class="p-2.5 border text-right">84</td>
-                                <td class="p-2.5 border text-right">2</td>
-                                <td class="p-2.5 border text-right">2,38%</td>
-                            </tr>
-                            <tr>
-                                <td class="p-2.5 border font-sans font-medium">Brute Force -XSS</td>
-                                <td class="p-2.5 border text-right">159</td>
-                                <td class="p-2.5 border text-right">32</td>
-                                <td class="p-2.5 border text-right">32</td>
-                                <td class="p-2.5 border text-right">228</td>
-                                <td class="p-2.5 border text-right">5</td>
-                                <td class="p-2.5 border text-right">2,19%</td>
-                            </tr>
-                            <tr>
-                                <td class="p-2.5 border font-sans font-medium">Brute Force -Web</td>
-                                <td class="p-2.5 border text-right">387</td>
-                                <td class="p-2.5 border text-right">78</td>
-                                <td class="p-2.5 border text-right">78</td>
-                                <td class="p-2.5 border text-right">553</td>
-                                <td class="p-2.5 border text-right">10</td>
-                                <td class="p-2.5 border text-right">1,81%</td>
-                            </tr>
-                            <tr>
-                                <td class="p-2.5 border font-sans font-medium">DDOS attack-LOIC-UDP</td>
-                                <td class="p-2.5 border text-right">1.211</td>
-                                <td class="p-2.5 border text-right">242</td>
-                                <td class="p-2.5 border text-right">243</td>
-                                <td class="p-2.5 border text-right">1.730</td>
-                                <td class="p-2.5 border text-right">34</td>
-                                <td class="p-2.5 border text-right">1,97%</td>
-                            </tr>
-                            <tr>
-                                <td class="p-2.5 border font-sans font-medium">DoS attacks-Slowloris</td>
-                                <td class="p-2.5 border text-right">6.798</td>
-                                <td class="p-2.5 border text-right">1.360</td>
-                                <td class="p-2.5 border text-right">1.360</td>
-                                <td class="p-2.5 border text-right">9.712</td>
-                                <td class="p-2.5 border text-right">194</td>
-                                <td class="p-2.5 border text-right">2,00%</td>
-                            </tr>
-                            <tr>
-                                <td class="p-2.5 border font-sans font-medium">DoS attacks-GoldenEye</td>
-                                <td class="p-2.5 border text-right">28.974</td>
-                                <td class="p-2.5 border text-right">5.795</td>
-                                <td class="p-2.5 border text-right">5.795</td>
-                                <td class="p-2.5 border text-right">41.392</td>
-                                <td class="p-2.5 border text-right">828</td>
-                                <td class="p-2.5 border text-right">2,00%</td>
-                            </tr>
-                            <tr>
-                                <td class="p-2.5 border font-sans font-medium">SSH-Bruteforce</td>
-                                <td class="p-2.5 border text-right">65.833</td>
-                                <td class="p-2.5 border text-right">13.166</td>
-                                <td class="p-2.5 border text-right">13.167</td>
-                                <td class="p-2.5 border text-right">94.048</td>
-                                <td class="p-2.5 border text-right">1.882</td>
-                                <td class="p-2.5 border text-right">2,00%</td>
-                            </tr>
-                            <tr class="bg-amber-50/70">
-                                <td class="p-2.5 border font-sans font-semibold text-amber-900">Infilteration</td>
-                                <td class="p-2.5 border text-right">36.249</td>
-                                <td class="p-2.5 border text-right">7.250</td>
-                                <td class="p-2.5 border text-right font-semibold">69.284</td>
-                                <td class="p-2.5 border text-right">113.819</td>
-                                <td class="p-2.5 border text-right">1.036</td>
-                                <td class="p-2.5 border text-right">0,91%</td>
-                            </tr>
-                            <tr>
-                                <td class="p-2.5 border font-sans font-medium">Bot</td>
-                                <td class="p-2.5 border text-right">101.174</td>
-                                <td class="p-2.5 border text-right">20.235</td>
-                                <td class="p-2.5 border text-right">20.235</td>
-                                <td class="p-2.5 border text-right">144.535</td>
-                                <td class="p-2.5 border text-right">2.891</td>
-                                <td class="p-2.5 border text-right">2,00%</td>
-                            </tr>
-                            <tr>
-                                <td class="p-2.5 border font-sans font-medium">DoS attacks-Hulk</td>
-                                <td class="p-2.5 border text-right">101.639</td>
-                                <td class="p-2.5 border text-right">20.328</td>
-                                <td class="p-2.5 border text-right">20.328</td>
-                                <td class="p-2.5 border text-right">145.199</td>
-                                <td class="p-2.5 border text-right">2.904</td>
-                                <td class="p-2.5 border text-right">2,00%</td>
-                            </tr>
-                            <tr>
-                                <td class="p-2.5 border font-sans font-medium">DDOS attack-HOIC</td>
-                                <td class="p-2.5 border text-right">139.202</td>
-                                <td class="p-2.5 border text-right">27.840</td>
-                                <td class="p-2.5 border text-right">27.841</td>
-                                <td class="p-2.5 border text-right">198.861</td>
-                                <td class="p-2.5 border text-right">3.978</td>
-                                <td class="p-2.5 border text-right">2,00%</td>
-                            </tr>
-                            <tr>
-                                <td class="p-2.5 border font-sans font-medium">DDoS attacks-LOIC-HTTP</td>
-                                <td class="p-2.5 border text-right">402.508</td>
-                                <td class="p-2.5 border text-right">80.502</td>
-                                <td class="p-2.5 border text-right">80.502</td>
-                                <td class="p-2.5 border text-right">575.012</td>
-                                <td class="p-2.5 border text-right">11.500</td>
-                                <td class="p-2.5 border text-right">2,00%</td>
-                            </tr>
-                            <tr class="bg-slate-50 font-semibold">
-                                <td class="p-2.5 border font-sans">Benign</td>
-                                <td class="p-2.5 border text-right">6.288.993</td>
-                                <td class="p-2.5 border text-right">1.257.799</td>
-                                <td class="p-2.5 border text-right">1.257.799</td>
-                                <td class="p-2.5 border text-right">8.984.277</td>
-                                <td class="p-2.5 border text-right">179.686</td>
-                                <td class="p-2.5 border text-right">2,00%</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Auditoria Multiclasse e Contagem de Conflitos -->
-            <div class="border-t border-slate-200 pt-6">
-                <h3 class="font-semibold text-slate-800 mb-2">Auditoria Multiclasse e Contagem de Conflitos
-                    (Infiltration vs. Benign)</h3>
-                <p class="text-sm text-slate-600 mb-4">
-                    Ao refazer o agrupamento dentro do dataset deduplicado estritamente pelas <strong>69 colunas
-                        numéricas</strong>
-                    utilizadas como entrada pelos modelos (já sem <code
-                        class="text-xs bg-slate-100 px-1 rounded">Dst Port</code> e
-                    <code class="text-xs bg-slate-100 px-1 rounded">Label</code>), obteve-se a distribuição de
-                    ambiguidade em todas as classes:
-                </p>
-
-                <div class="grid md:grid-cols-2 gap-6 items-start">
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse text-sm">
-                            <thead>
-                                <tr class="bg-slate-100 text-slate-700">
-                                    <th class="p-2.5 border">Rótulos Distintos por Vetor</th>
-                                    <th class="p-2.5 border text-right">Vetores Únicos</th>
-                                    <th class="p-2.5 border text-right">Total de Linhas Afetadas</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-200 font-mono text-xs">
-                                <tr>
-                                    <td class="p-2.5 border font-sans">3 rótulos</td>
-                                    <td class="p-2.5 border text-right">93</td>
-                                    <td class="p-2.5 border text-right">279</td>
-                                </tr>
-                                <tr>
-                                    <td class="p-2.5 border font-sans">2 rótulos</td>
-                                    <td class="p-2.5 border text-right">62.060</td>
-                                    <td class="p-2.5 border text-right">124.120</td>
-                                </tr>
-                                <tr>
-                                    <td class="p-2.5 border font-sans">1 rótulo (sem conflito)</td>
-                                    <td class="p-2.5 border text-right">10.185.159</td>
-                                    <td class="p-2.5 border text-right">10.185.159</td>
-                                </tr>
-                                <tr class="bg-slate-100 font-bold">
-                                    <td class="p-2.5 border font-sans">TOTAL</td>
-                                    <td class="p-2.5 border text-right">10.247.312</td>
-                                    <td class="p-2.5 border text-right">10.309.558</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div class="bg-rose-50 border-l-4 border-rose-500 p-4 rounded-r-lg space-y-3">
-                        <h4 class="font-semibold text-rose-900 text-sm">Diagnóstico do Gargalo em <em>Infiltration</em>
-                        </h4>
-                        <p class="text-xs md:text-sm text-rose-800 leading-relaxed">
-                            Dos <strong>62.060</strong> vetores com dois rótulos distintos, <strong>61.508</strong>
-                            contêm exclusivamente <em>Benign</em> e <em>Infiltration</em> (123.016 linhas). Outros
-                            <strong>85</strong> vetores que contêm ambos aparecem com um terceiro rótulo (255 linhas),
-                            totalizando <strong>61.593 vetores</strong> e <strong>123.271 linhas</strong> envolvendo o
-                            par.
-                        </p>
-                        <div class="grid grid-cols-3 gap-2 pt-2 border-t border-rose-200 text-center">
-                            <div class="bg-white/80 p-2 rounded">
-                                <span class="block text-[11px] text-rose-700">Vetores Conflitantes (Treino)</span>
-                                <span class="font-bold text-rose-950 font-mono text-sm">9.914</span>
-                            </div>
-                            <div class="bg-white/80 p-2 rounded">
-                                <span class="block text-[11px] text-rose-700">Linhas Infil. Afetadas</span>
-                                <span class="font-bold text-rose-950 font-mono text-sm">9.914</span>
-                            </div>
-                            <div class="bg-white/80 p-2 rounded">
-                                <span class="block text-[11px] text-rose-700">% Infiltration no Treino</span>
-                                <span class="font-bold text-rose-950 font-mono text-sm">27,35%</span>
-                            </div>
+                <div class="flow-steps">
+                    <div class="flow-step">Dataset Bruto: CIC-IDS-2018</div>
+                    <div class="flow-step">&darr; Conversão float64 para float32 &amp; Limpeza NaN/Inf</div>
+                    <div class="flow-step">&darr; Deduplicação Global: 69 Features + Dst Port + Label</div>
+                    <div class="flow-step">&darr; Remoção de Dst Port, Timestamp e Arquivo_origem</div>
+                    <div class="flow-step">&darr; Partição Temporal com Gaps: 70% Treino, 15% Validação, 15% Teste</div>
+                    <div class="flow-branch">
+                        <div class="flow-step"><strong>Regressão Logística</strong><br>Otimizador SAG / Ajuste de C
                         </div>
+                        <div class="flow-step"><strong>Random Forest</strong><br>Bootstrap Sub-sampling max_samples=0.2
+                            &amp; 3 Sementes</div>
                     </div>
+                    <div class="flow-step">&darr; Avaliação de Métricas: F1-Score, Recall, Precision</div>
+                    <div class="flow-step">&darr; Auditoria de Conflitos: Colisão Infiltration vs Benign</div>
+                    <div class="flow-step">&darr; Próximo Passo: Redes Neurais Profundas</div>
                 </div>
             </div>
         </section>
 
-        <!-- 4. Arquitetura (C4 Model & Fluxograma) -->
-        <section class="bg-white p-8 rounded-xl shadow-md border border-slate-100">
-            <h2 class="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-2">
-                <span class="text-indigo-600">04.</span> Arquitetura e Modelagem do Sistema
-            </h2>
-            <p class="text-slate-600 mb-6">Abaixo estão representados o diagrama de arquitetura utilizando o padrão
-                <strong>C4 Model (Nível de Containers)</strong> e o fluxograma operacional do pipeline de dados.
+        <section>
+            <h2><span class="num">05.</span> Resultados e Comparativo de Algoritmos (Gemini vs. Claude)</h2>
+            <h3>Desempenho Geral por Algoritmo e Execução</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Modelo / Execução</th>
+                        <th>Limiar / Parâmetro</th>
+                        <th class="num-col">Acurácia</th>
+                        <th class="num-col">Precisão (Ataque)</th>
+                        <th class="num-col">Recall (Ataque)</th>
+                        <th class="num-col">F1-Score (Ataque)</th>
+                        <th class="num-col">F1-Score Macro</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Random Forest (Claude)</td>
+                        <td>Ensemble (3 Sementes)</td>
+                        <td class="num-col">99,84%</td>
+                        <td class="num-col">98,84%</td>
+                        <td class="num-col">96,39%</td>
+                        <td class="num-col">0,9760</td>
+                        <td class="num-col">0,9863</td>
+                    </tr>
+                    <tr>
+                        <td>Random Forest (Gemini)</td>
+                        <td>Thresh = 0.8640</td>
+                        <td class="num-col">99,34%</td>
+                        <td class="num-col">99,42%</td>
+                        <td class="num-col">95,21%</td>
+                        <td class="num-col">0,9727</td>
+                        <td class="num-col">0,9845</td>
+                    </tr>
+                    <tr>
+                        <td>Regressão Logística (Gemini)</td>
+                        <td>Thresh = 0.8577</td>
+                        <td class="num-col">97,08%</td>
+                        <td class="num-col">90,32%</td>
+                        <td class="num-col">85,43%</td>
+                        <td class="num-col">0,8781</td>
+                        <td class="num-col">0,9307</td>
+                    </tr>
+                    <tr>
+                        <td>Regressão Logística (Claude)</td>
+                        <td>C = 0.001 (sag)</td>
+                        <td class="num-col">94,32%</td>
+                        <td class="num-col">69,78%</td>
+                        <td class="num-col">95,10%</td>
+                        <td class="num-col">0,8049</td>
+                        <td class="num-col">0,8858</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Ataques Críticos e Furtivos: Taxa de Detecção (Recall %)</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Sub-Classe de Ataque</th>
+                        <th class="num-col">Total Amostras</th>
+                        <th class="num-col">RF Gemini (%)</th>
+                        <th class="num-col">RL Gemini (%)</th>
+                        <th class="num-col">RL Claude (%)</th>
+                        <th class="num-col">RF Claude (%)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Brute Force - XSS</td>
+                        <td class="num-col">32</td>
+                        <td class="num-col">50,00%</td>
+                        <td class="num-col">0,00%</td>
+                        <td class="num-col">0,00%</td>
+                        <td class="num-col">68,75%</td>
+                    </tr>
+                    <tr>
+                        <td>Brute Force - Web</td>
+                        <td class="num-col">78</td>
+                        <td class="num-col">64,10%</td>
+                        <td class="num-col">0,00%</td>
+                        <td class="num-col">8,97%</td>
+                        <td class="num-col">79,49%</td>
+                    </tr>
+                    <tr>
+                        <td>Infiltration</td>
+                        <td class="num-col">7.250</td>
+                        <td class="num-col">4,43%</td>
+                        <td class="num-col">2,28%</td>
+                        <td class="num-col">10,48%</td>
+                        <td class="num-col">13,67%</td>
+                    </tr>
+                    <tr>
+                        <td>SQL Injection</td>
+                        <td class="num-col">12</td>
+                        <td class="num-col">0,00%</td>
+                        <td class="num-col">8,33%</td>
+                        <td class="num-col">25,00%</td>
+                        <td class="num-col">58,33%</td>
+                    </tr>
+                    <tr>
+                        <td>DoS Slowloris</td>
+                        <td class="num-col">1.360</td>
+                        <td class="num-col">91,32%</td>
+                        <td class="num-col">28,75%</td>
+                        <td class="num-col">99,93%</td>
+                        <td class="num-col">99,85%</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Detecção Massiva: Alta Eficiência em Todos os Modelos (Recall %)</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Sub-Classe de Ataque</th>
+                        <th class="num-col">Total Amostras</th>
+                        <th class="num-col">RF Gemini</th>
+                        <th class="num-col">RL Gemini</th>
+                        <th class="num-col">RL Claude</th>
+                        <th class="num-col">RF Claude</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Bot</td>
+                        <td class="num-col">20.235</td>
+                        <td class="num-col">99,55%</td>
+                        <td class="num-col">79,63%</td>
+                        <td class="num-col">99,29%</td>
+                        <td class="num-col">99,82%</td>
+                    </tr>
+                    <tr>
+                        <td>DDoS-HOIC</td>
+                        <td class="num-col">27.840</td>
+                        <td class="num-col">98,66%</td>
+                        <td class="num-col">93,60%</td>
+                        <td class="num-col">99,95%</td>
+                        <td class="num-col">99,89%</td>
+                    </tr>
+                    <tr>
+                        <td>DDOS - LOIC-HTTP</td>
+                        <td class="num-col">80.502</td>
+                        <td class="num-col">98,92%</td>
+                        <td class="num-col">94,22%</td>
+                        <td class="num-col">100,00%</td>
+                        <td class="num-col">99,97%</td>
+                    </tr>
+                    <tr>
+                        <td>DoS - GoldenEye</td>
+                        <td class="num-col">5.795</td>
+                        <td class="num-col">99,88%</td>
+                        <td class="num-col">57,77%</td>
+                        <td class="num-col">89,78%</td>
+                        <td class="num-col">100,00%</td>
+                    </tr>
+                    <tr>
+                        <td>SSH-Bruteforce</td>
+                        <td class="num-col">13.166</td>
+                        <td class="num-col">99,98%</td>
+                        <td class="num-col">83,02%</td>
+                        <td class="num-col">100,00%</td>
+                        <td class="num-col">99,99%</td>
+                    </tr>
+                    <tr>
+                        <td>DDOS-LOIC-UDP</td>
+                        <td class="num-col">242</td>
+                        <td class="num-col">100,00%</td>
+                        <td class="num-col">100,00%</td>
+                        <td class="num-col">100,00%</td>
+                        <td class="num-col">100,00%</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Estabilidade do Random Forest por Semente (Validação — Sementes 42, 123 e 199)</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Sub-Classe / Label</th>
+                        <th class="num-col">Total Validação</th>
+                        <th class="num-col">Semente 42</th>
+                        <th class="num-col">Semente 123</th>
+                        <th class="num-col">Semente 199</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Infilteration</td>
+                        <td class="num-col">7.250</td>
+                        <td class="num-col">987 (13,61%)</td>
+                        <td class="num-col">983 (13,56%)</td>
+                        <td class="num-col">991 (13,67%)</td>
+                    </tr>
+                    <tr>
+                        <td>SQL Injection</td>
+                        <td class="num-col">12</td>
+                        <td class="num-col">6 (50,00%)</td>
+                        <td class="num-col">7 (58,33%)</td>
+                        <td class="num-col">7 (58,33%)</td>
+                    </tr>
+                    <tr>
+                        <td>Brute Force -XSS</td>
+                        <td class="num-col">32</td>
+                        <td class="num-col">22 (68,75%)</td>
+                        <td class="num-col">22 (68,75%)</td>
+                        <td class="num-col">22 (68,75%)</td>
+                    </tr>
+                    <tr>
+                        <td>Brute Force -Web</td>
+                        <td class="num-col">78</td>
+                        <td class="num-col">62 (79,49%)</td>
+                        <td class="num-col">62 (79,49%)</td>
+                        <td class="num-col">62 (79,49%)</td>
+                    </tr>
+                    <tr>
+                        <td>Bot</td>
+                        <td class="num-col">20.235</td>
+                        <td class="num-col">20.198 (99,82%)</td>
+                        <td class="num-col">20.203 (99,84%)</td>
+                        <td class="num-col">20.198 (99,82%)</td>
+                    </tr>
+                    <tr>
+                        <td>DoS attacks-Slowloris</td>
+                        <td class="num-col">1.360</td>
+                        <td class="num-col">1.358 (99,85%)</td>
+                        <td class="num-col">1.358 (99,85%)</td>
+                        <td class="num-col">1.358 (99,85%)</td>
+                    </tr>
+                    <tr>
+                        <td>Benign</td>
+                        <td class="num-col">1.257.799</td>
+                        <td class="num-col">1.256.109 (99,87%)</td>
+                        <td class="num-col">1.255.722 (99,83%)</td>
+                        <td class="num-col">1.255.792 (99,84%)</td>
+                    </tr>
+                    <tr>
+                        <td>DDOS attack-HOIC</td>
+                        <td class="num-col">27.840</td>
+                        <td class="num-col">27.805 (99,87%)</td>
+                        <td class="num-col">27.794 (99,83%)</td>
+                        <td class="num-col">27.808 (99,89%)</td>
+                    </tr>
+                    <tr>
+                        <td>DDoS attacks-LOIC-HTTP</td>
+                        <td class="num-col">80.502</td>
+                        <td class="num-col">80.471 (99,96%)</td>
+                        <td class="num-col">80.475 (99,97%)</td>
+                        <td class="num-col">80.475 (99,97%)</td>
+                    </tr>
+                    <tr>
+                        <td>SSH-Bruteforce</td>
+                        <td class="num-col">13.166</td>
+                        <td class="num-col">13.165 (99,99%)</td>
+                        <td class="num-col">13.165 (99,99%)</td>
+                        <td class="num-col">13.165 (99,99%)</td>
+                    </tr>
+                    <tr>
+                        <td>DoS attacks-GoldenEye</td>
+                        <td class="num-col">5.795</td>
+                        <td class="num-col">5.795 (100,00%)</td>
+                        <td class="num-col">5.795 (100,00%)</td>
+                        <td class="num-col">5.795 (100,00%)</td>
+                    </tr>
+                    <tr>
+                        <td>DDOS attack-LOIC-UDP</td>
+                        <td class="num-col">242</td>
+                        <td class="num-col">242 (100,00%)</td>
+                        <td class="num-col">242 (100,00%)</td>
+                        <td class="num-col">242 (100,00%)</td>
+                    </tr>
+                    <tr>
+                        <td>FTP-Brute Force</td>
+                        <td class="num-col">8</td>
+                        <td class="num-col">8 (100,00%)</td>
+                        <td class="num-col">8 (100,00%)</td>
+                        <td class="num-col">8 (100,00%)</td>
+                    </tr>
+                    <tr>
+                        <td>DoS attacks-SlowHTTPTest</td>
+                        <td class="num-col">7</td>
+                        <td class="num-col">7 (100,00%)</td>
+                        <td class="num-col">7 (100,00%)</td>
+                        <td class="num-col">7 (100,00%)</td>
+                    </tr>
+                    <tr>
+                        <td>DoS attacks-Hulk</td>
+                        <td class="num-col">20.328</td>
+                        <td class="num-col">20.328 (100,00%)</td>
+                        <td class="num-col">20.328 (100,00%)</td>
+                        <td class="num-col">20.328 (100,00%)</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section>
+            <h2><span class="num">06.</span> Evolução do Projeto (Linha do Tempo)</h2>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <strong>Marco Inicial — Contextualização e Coleta</strong>
+                    <p>Estudo do dataset CSE-CIC-IDS2018, mapeamento das 80+ características estatísticas extraídas pelo
+                        CICFlowMeter-V3 e estruturação do ambiente em Nuvem.</p>
+                </div>
+                <div class="timeline-item">
+                    <strong>Marco Intermediário — Engenharia de Dados e Limpeza</strong>
+                    <p>Resolução do problema de estouro de memória RAM com DuckDB, remoção de registros nulos/infinitos
+                        e aplicação da deduplicação global gerando o arquivo
+                        <code>dataset_global_deduplicado.parquet</code>.</p>
+                </div>
+                <div class="timeline-item">
+                    <strong>Marco Final — Validação, Auditoria e Consolidação de Modelos</strong>
+                    <p>Treinamento comparativo entre Regressão Logística e Random Forest (sementes 42, 123 e 199) sobre
+                        69 features numéricas com partição temporal e gaps. Auditoria multiclasse comprovando que 27,35%
+                        das linhas de Infiltration no treino colidem exatamente com vetores Benign.</p>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2><span class="num">07.</span> Apresentação em Vídeo</h2>
+            <p>Demonstração complementar do projeto e dos resultados obtidos no sistema NIDS:</p>
+            <div class="video-wrapper">
+                <iframe src="https://www.youtube.com/embed/f_2SLlKhzNg"
+                    title="Apresentação do Projeto LIAA - Sistema de Detecção de Intrusão (NIDS)"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    referrerpolicy="strict-origin-when-cross-origin" allowfullscreen>
+                </iframe>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--muted);">
+                Link direto: <a href="https://youtu.be/f_2SLlKhzNg" target="_blank"
+                    rel="noopener noreferrer">https://youtu.be/f_2SLlKhzNg</a>
             </p>
-
-            <!-- Diagrama C4 Container via Mermaid -->
-            <div class="mb-8">
-                <h3 class="font-semibold text-slate-700 mb-3">Diagrama C4 — Containers da Solução</h3>
-                <div
-                    class="mermaid flex justify-center bg-slate-50 p-4 rounded-lg border border-slate-200 overflow-x-auto">
-                    C4Container
-                    title Diagrama de Containers - Sistema NIDS (CSE-CIC-IDS2018)
-
-                    Person(analyst, "Cibercientista / Analista", "Gerencia o pipeline e avalia métricas")
-
-                    System_Boundary(c1, "Ambiente de Processamento (Google Colab / Local)") {
-                    Container(notebook, "Jupyter Notebook / Python", "Pandas, Scikit-Learn", "Orquestra o
-                    pré-processamento e treino")
-                    ContainerDb(duckdb, "DuckDB Engine", "SQL / Parquet", "Manipula e filtra 16.1M de linhas via
-                    otimização de RAM")
-                    Container(models, "Modelos ML", "Random Forest / Regressão Logística", "Treinamento estocástico com
-                    múltiplas sementes")
-                    }
-
-                    Rel(analyst, notebook, "Executa scripts e define hiperparâmetros", "HTTPS")
-                    Rel(notebook, duckdb, "Consulta e particiona dados", "SQL / Parquet")
-                    Rel(notebook, models, "Alimenta dados de Treino/Validação/Teste", "Arrays Numpy")
-                </div>
-            </div>
-
-            <!-- Fluxograma Operacional via Mermaid -->
-            <div>
-                <h3 class="font-semibold text-slate-700 mb-3">Fluxograma — Pipeline de Engenharia e Avaliação de Modelos
-                </h3>
-                <div
-                    class="mermaid flex justify-center bg-slate-50 p-4 rounded-lg border border-slate-200 overflow-x-auto">
-                    graph TD
-                    A[Dataset Bruto: CIC-IDS-2018] --> B[Conversão float64 para float32 & Limpeza NaN/Inf]
-                    B --> C[Deduplicação Global: 69 Features + Dst Port + Label]
-                    C --> D[Remoção de Dst Port, Timestamp e Arquivo_origem]
-                    D --> E[Partição Temporal com Gaps: 70% Treino, 15% Validação, 15% Teste]
-                    E --> F{Escolha do Modelo}
-                    F -->|Regressão Logística| G[Otimizador SAG / Ajuste de C]
-                    F -->|Random Forest| H[Bootstrap Sub-sampling max_samples=0.2 & 3 Sementes]
-                    G --> I[Avaliação de Métricas: F1-Score, Recall, Precision]
-                    H --> I
-                    I --> J[Auditoria de Conflitos: Colisão Infiltration vs Benign]
-                    J --> K[Próximo Passo: Redes Neurais Profundas]
-                </div>
-            </div>
         </section>
 
-        <!-- 5. Resultados e Comparativo de Algoritmos (Gemini vs. Claude) -->
-        <section class="bg-white p-8 rounded-xl shadow-md border border-slate-100">
-            <h2 class="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-2">
-                <span class="text-indigo-600">05.</span> Resultados e Comparativo de Algoritmos (Gemini vs. Claude)
-            </h2>
-            <p class="text-slate-600 mb-6">
-                Abaixo encontram-se consolidados os desempenhos comparativos entre os modelos de <strong>Random
-                    Forest</strong> e <strong>Regressão Logística</strong> configurados através das recomendações das
-                IAs (Gemini e Claude).
-            </p>
-
-            <!-- Tabela 1: Desempenho Geral -->
-            <div class="mb-8">
-                <h3 class="font-semibold text-slate-800 mb-3">Desempenho Geral por Algoritmo e Execução</h3>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse text-sm">
-                        <thead>
-                            <tr class="bg-slate-100 text-slate-700">
-                                <th class="p-3 border">Modelo / Execução</th>
-                                <th class="p-3 border">Limiar / Parâmetro</th>
-                                <th class="p-3 border">Acurácia</th>
-                                <th class="p-3 border">Precisão (Ataque)</th>
-                                <th class="p-3 border">Recall (Ataque)</th>
-                                <th class="p-3 border">F1-Score (Ataque)</th>
-                                <th class="p-3 border">F1-Score Macro</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-200">
-                            <tr>
-                                <td class="p-3 border font-medium">Random Forest (Claude)</td>
-                                <td class="p-3 border">Ensemble (3 Sementes)</td>
-                                <td class="p-3 border">99,84%</td>
-                                <td class="p-3 border">98,84%</td>
-                                <td class="p-3 border">96,39%</td>
-                                <td class="p-3 border font-bold text-indigo-600">0,9760</td>
-                                <td class="p-3 border font-bold text-indigo-600">0,9863</td>
-                            </tr>
-                            <tr>
-                                <td class="p-3 border font-medium">Random Forest (Gemini)</td>
-                                <td class="p-3 border">Thresh = 0.8640</td>
-                                <td class="p-3 border">99,34%</td>
-                                <td class="p-3 border">99,42%</td>
-                                <td class="p-3 border">95,21%</td>
-                                <td class="p-3 border">0,9727</td>
-                                <td class="p-3 border">0,9845</td>
-                            </tr>
-                            <tr>
-                                <td class="p-3 border font-medium">Regressão Logística (Gemini)</td>
-                                <td class="p-3 border">Thresh = 0.8577</td>
-                                <td class="p-3 border">97,08%</td>
-                                <td class="p-3 border">90,32%</td>
-                                <td class="p-3 border">85,43%</td>
-                                <td class="p-3 border">0,8781</td>
-                                <td class="p-3 border">0,9307</td>
-                            </tr>
-                            <tr>
-                                <td class="p-3 border font-medium">Regressão Logística (Claude)</td>
-                                <td class="p-3 border">C = 0.001 (sag)</td>
-                                <td class="p-3 border">94,32%</td>
-                                <td class="p-3 border">69,78%</td>
-                                <td class="p-3 border">95,10%</td>
-                                <td class="p-3 border">0,8049</td>
-                                <td class="p-3 border">0,8858</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Tabela 2: Ataques Críticos e Furtivos -->
-            <div class="mb-8">
-                <h3 class="font-semibold text-slate-800 mb-3">Ataques Críticos e Furtivos: Taxa de Detecção (Recall %)
-                </h3>
-                <p class="text-xs text-slate-500 mb-2">Ataques web de baixa frequência e infiltrações expõem a
-                    fragilidade da Regressão Logística e o impacto da sobreposição de vetores com tráfego benigno.</p>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse text-sm">
-                        <thead>
-                            <tr class="bg-slate-100 text-slate-700">
-                                <th class="p-3 border">Sub-Classe de Ataque</th>
-                                <th class="p-3 border">Total Amostras</th>
-                                <th class="p-3 border">RF Gemini (%)</th>
-                                <th class="p-3 border">RL Gemini (%)</th>
-                                <th class="p-3 border">RL Claude (%)</th>
-                                <th class="p-3 border">RF Claude (%)</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-200">
-                            <tr>
-                                <td class="p-3 border font-medium">Brute Force - XSS</td>
-                                <td class="p-3 border">32</td>
-                                <td class="p-3 border">50,00%</td>
-                                <td class="p-3 border">0,00%</td>
-                                <td class="p-3 border">0,00%</td>
-                                <td class="p-3 border font-bold text-indigo-600">68,75%</td>
-                            </tr>
-                            <tr>
-                                <td class="p-3 border font-medium">Brute Force - Web</td>
-                                <td class="p-3 border">78</td>
-                                <td class="p-3 border">64,10%</td>
-                                <td class="p-3 border">0,00%</td>
-                                <td class="p-3 border">8,97%</td>
-                                <td class="p-3 border font-bold text-indigo-600">79,49%</td>
-                            </tr>
-                            <tr>
-                                <td class="p-3 border font-medium">Infiltration</td>
-                                <td class="p-3 border">7.250</td>
-                                <td class="p-3 border">4,43%</td>
-                                <td class="p-3 border">2,28%</td>
-                                <td class="p-3 border">10,48%</td>
-                                <td class="p-3 border font-bold text-indigo-600">13,67%</td>
-                            </tr>
-                            <tr>
-                                <td class="p-3 border font-medium">SQL Injection</td>
-                                <td class="p-3 border">12</td>
-                                <td class="p-3 border">0,00%</td>
-                                <td class="p-3 border">8,33%</td>
-                                <td class="p-3 border">25,00%</td>
-                                <td class="p-3 border font-bold text-indigo-600">58,33%</td>
-                            </tr>
-                            <tr>
-                                <td class="p-3 border font-medium">DoS Slowloris</td>
-                                <td class="p-3 border">1.360</td>
-                                <td class="p-3 border">91,32%</td>
-                                <td class="p-3 border">28,75%</td>
-                                <td class="p-3 border font-bold text-indigo-600">99,93%</td>
-                                <td class="p-3 border">99,85%</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Tabela 3: Ataques Massivos -->
-            <div class="mb-8">
-                <h3 class="font-semibold text-slate-800 mb-3">Detecção Massiva: Alta Eficiência em Todos os Modelos
-                    (Recall %)</h3>
-                <p class="text-xs text-slate-500 mb-2">Padrões repetitivos e de alto tráfego são identificados com
-                    precisão próxima a 100%.</p>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse text-sm">
-                        <thead>
-                            <tr class="bg-slate-100 text-slate-700">
-                                <th class="p-3 border">Sub-Classe de Ataque</th>
-                                <th class="p-3 border">Total Amostras</th>
-                                <th class="p-3 border">RF Gemini</th>
-                                <th class="p-3 border">RL Gemini</th>
-                                <th class="p-3 border">RL Claude</th>
-                                <th class="p-3 border">RF Claude</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-200">
-                            <tr>
-                                <td class="p-3 border font-medium">Bot</td>
-                                <td class="p-3 border">20.235</td>
-                                <td class="p-3 border">99,55%</td>
-                                <td class="p-3 border">79,63%</td>
-                                <td class="p-3 border">99,29%</td>
-                                <td class="p-3 border font-bold text-indigo-600">99,82%</td>
-                            </tr>
-                            <tr>
-                                <td class="p-3 border font-medium">DDoS-HOIC</td>
-                                <td class="p-3 border">27.840</td>
-                                <td class="p-3 border">98,66%</td>
-                                <td class="p-3 border">93,60%</td>
-                                <td class="p-3 border font-bold text-indigo-600">99,95%</td>
-                                <td class="p-3 border">99,89%</td>
-                            </tr>
-                            <tr>
-                                <td class="p-3 border font-medium">DDOS - LOIC-HTTP</td>
-                                <td class="p-3 border">80.502</td>
-                                <td class="p-3 border">98,92%</td>
-                                <td class="p-3 border">94,22%</td>
-                                <td class="p-3 border font-bold text-indigo-600">100,00%</td>
-                                <td class="p-3 border">99,97%</td>
-                            </tr>
-                            <tr>
-                                <td class="p-3 border font-medium">DoS - GoldenEye</td>
-                                <td class="p-3 border">5.795</td>
-                                <td class="p-3 border">99,88%</td>
-                                <td class="p-3 border">57,77%</td>
-                                <td class="p-3 border">89,78%</td>
-                                <td class="p-3 border font-bold text-indigo-600">100,00%</td>
-                            </tr>
-                            <tr>
-                                <td class="p-3 border font-medium">SSH-Bruteforce</td>
-                                <td class="p-3 border">13.166</td>
-                                <td class="p-3 border">99,98%</td>
-                                <td class="p-3 border">83,02%</td>
-                                <td class="p-3 border font-bold text-indigo-600">100,00%</td>
-                                <td class="p-3 border">99,99%</td>
-                            </tr>
-                            <tr>
-                                <td class="p-3 border font-medium">DDOS-LOIC-UDP</td>
-                                <td class="p-3 border">242</td>
-                                <td class="p-3 border font-bold text-indigo-600">100,00%</td>
-                                <td class="p-3 border font-bold text-indigo-600">100,00%</td>
-                                <td class="p-3 border font-bold text-indigo-600">100,00%</td>
-                                <td class="p-3 border font-bold text-indigo-600">100,00%</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Tabela 4: Estabilidade do Random Forest nas 3 Sementes -->
-            <div>
-                <h3 class="font-semibold text-slate-800 mb-3">Estabilidade do Random Forest por Semente (Validação —
-                    Sementes 42, 123 e 199)</h3>
-                <p class="text-xs text-slate-500 mb-2">Comparação detalhada de acertos e taxa de detecção (Recall) entre
-                    execuções estocásticas no conjunto de validação.</p>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse text-xs md:text-sm">
-                        <thead>
-                            <tr class="bg-slate-100 text-slate-700">
-                                <th class="p-2.5 border">Sub-Classe / Label</th>
-                                <th class="p-2.5 border text-right">Total Validação</th>
-                                <th class="p-2.5 border text-right">Semente 42 (Acertos / Recall)</th>
-                                <th class="p-2.5 border text-right">Semente 123 (Acertos / Recall)</th>
-                                <th class="p-2.5 border text-right">Semente 199 (Acertos / Recall)</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-200 font-mono text-xs">
-                            <tr class="bg-amber-50/70">
-                                <td class="p-2.5 border font-sans font-semibold text-amber-900">Infilteration</td>
-                                <td class="p-2.5 border text-right">7.250</td>
-                                <td class="p-2.5 border text-right">987 (13,61%)</td>
-                                <td class="p-2.5 border text-right">983 (13,56%)</td>
-                                <td class="p-2.5 border text-right font-semibold text-indigo-700">991 (13,67%)</td>
-                            </tr>
-                            <tr>
-                                <td class="p-2.5 border font-sans font-medium">SQL Injection</td>
-                                <td class="p-2.5 border text-right">12</td>
-                                <td class="p-2.5 border text-right">6 (50,00%)</td>
-                                <td class="p-2.5 border text-right">7 (58,33%)</td>
-                                <td class="p-2.5 border text-right">7 (58,33%)</td>
-                            </tr>
-                            <tr>
-                                <td class="p-2.5 border font-sans font-medium">Brute Force -XSS</td>
-                                <td class="p-2.5 border text-right">32</td>
-                                <td class="p-2.5 border text-right">22 (68,75%)</td>
-                                <td class="p-2.5 border text-right">22 (68,75%)</td>
-                                <td class="p-2.5 border text-right">22 (68,75%)</td>
-                            </tr>
-                            <tr>
-                                <td class="p-2.5 border font-sans font-medium">Brute Force -Web</td>
-                                <td class="p-2.5 border text-right">78</td>
-                                <td class="p-2.5 border text-right">62 (79,49%)</td>
-                                <td class="p-2.5 border text-right">62 (79,49%)</td>
-                                <td class="p-2.5 border text-right">62 (79,49%)</td>
-                            </tr>
-                            <tr>
-                                <td class="p-2.5 border font-sans font-medium">Bot</td>
-                                <td class="p-2.5 border text-right">20.235</td>
-                                <td class="p-2.5 border text-right">20.198 (99,82%)</td>
-                                <td class="p-2.5 border text-right">20.203 (99,84%)</td>
-                                <td class="p-2.5 border text-right">20.198 (99,82%)</td>
-                            </tr>
-                            <tr>
-                                <td class="p-2.5 border font-sans font-medium">DoS attacks-Slowloris</td>
-                                <td class="p-2.5 border text-right">1.360</td>
-                                <td class="p-2.5 border text-right">1.358 (99,85%)</td>
-                                <td class="p-2.5 border text-right">1.358 (99,85%)</td>
-                                <td class="p-2.5 border text-right">1.358 (99,85%)</td>
-                            </tr>
-                            <tr>
-                                <td class="p-2.5 border font-sans font-medium">Benign</td>
-                                <td class="p-2.5 border text-right">1.257.799</td>
-                                <td class="p-2.5 border text-right">1.256.109 (99,87%)</td>
-                                <td class="p-2.5 border text-right">1.255.722 (99,83%)</td>
-                                <td class="p-2.5 border text-right">1.255.792 (99,84%)</td>
-                            </tr>
-                            <tr>
-                                <td class="p-2.5 border font-sans font-medium">DDOS attack-HOIC</td>
-                                <td class="p-2.5 border text-right">27.840</td>
-                                <td class="p-2.5 border text-right">27.805 (99,87%)</td>
-                                <td class="p-2.5 border text-right">27.794 (99,83%)</td>
-                                <td class="p-2.5 border text-right">27.808 (99,89%)</td>
-                            </tr>
-                            <tr>
-                                <td class="p-2.5 border font-sans font-medium">DDoS attacks-LOIC-HTTP</td>
-                                <td class="p-2.5 border text-right">80.502</td>
-                                <td class="p-2.5 border text-right">80.471 (99,96%)</td>
-                                <td class="p-2.5 border text-right">80.475 (99,97%)</td>
-                                <td class="p-2.5 border text-right">80.475 (99,97%)</td>
-                            </tr>
-                            <tr>
-                                <td class="p-2.5 border font-sans font-medium">SSH-Bruteforce</td>
-                                <td class="p-2.5 border text-right">13.166</td>
-                                <td class="p-2.5 border text-right">13.165 (99,99%)</td>
-                                <td class="p-2.5 border text-right">13.165 (99,99%)</td>
-                                <td class="p-2.5 border text-right">13.165 (99,99%)</td>
-                            </tr>
-                            <tr>
-                                <td class="p-2.5 border font-sans font-medium">DoS attacks-GoldenEye</td>
-                                <td class="p-2.5 border text-right">5.795</td>
-                                <td class="p-2.5 border text-right">5.795 (100,00%)</td>
-                                <td class="p-2.5 border text-right">5.795 (100,00%)</td>
-                                <td class="p-2.5 border text-right">5.795 (100,00%)</td>
-                            </tr>
-                            <tr>
-                                <td class="p-2.5 border font-sans font-medium">DDOS attack-LOIC-UDP</td>
-                                <td class="p-2.5 border text-right">242</td>
-                                <td class="p-2.5 border text-right">242 (100,00%)</td>
-                                <td class="p-2.5 border text-right">242 (100,00%)</td>
-                                <td class="p-2.5 border text-right">242 (100,00%)</td>
-                            </tr>
-                            <tr>
-                                <td class="p-2.5 border font-sans font-medium">FTP-BruteForce</td>
-                                <td class="p-2.5 border text-right">8</td>
-                                <td class="p-2.5 border text-right">8 (100,00%)</td>
-                                <td class="p-2.5 border text-right">8 (100,00%)</td>
-                                <td class="p-2.5 border text-right">8 (100,00%)</td>
-                            </tr>
-                            <tr>
-                                <td class="p-2.5 border font-sans font-medium">DoS attacks-SlowHTTPTest</td>
-                                <td class="p-2.5 border text-right">7</td>
-                                <td class="p-2.5 border text-right">7 (100,00%)</td>
-                                <td class="p-2.5 border text-right">7 (100,00%)</td>
-                                <td class="p-2.5 border text-right">7 (100,00%)</td>
-                            </tr>
-                            <tr>
-                                <td class="p-2.5 border font-sans font-medium">DoS attacks-Hulk</td>
-                                <td class="p-2.5 border text-right">20.328</td>
-                                <td class="p-2.5 border text-right">20.328 (100,00%)</td>
-                                <td class="p-2.5 border text-right">20.328 (100,00%)</td>
-                                <td class="p-2.5 border text-right">20.328 (100,00%)</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
-
-        <!-- 6. Evolução do Projeto ao Longo do Semestre -->
-        <section class="bg-white p-8 rounded-xl shadow-md border border-slate-100">
-            <h2 class="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-2">
-                <span class="text-indigo-600">06.</span> Evolução do Projeto (Linha do Tempo)
-            </h2>
-            <div class="border-l-4 border-indigo-600 pl-6 space-y-8">
-                <div>
-                    <span class="text-xs font-bold bg-indigo-100 text-indigo-800 px-2.5 py-1 rounded">Marco
-                        Inicial</span>
-                    <h3 class="text-lg font-bold text-slate-800 mt-2">Contextualização e Coleta</h3>
-                    <p class="text-sm text-slate-600 mt-1">Estudo do dataset CSE-CIC-IDS2018, mapeamento das 80+
-                        características estatísticas extraídas pelo CICFlowMeter-V3 e estruturação do ambiente em
-                        Nuvem.</p>
-                </div>
-                <div>
-                    <span class="text-xs font-bold bg-indigo-100 text-indigo-800 px-2.5 py-1 rounded">Marco
-                        Intermediário</span>
-                    <h3 class="text-lg font-bold text-slate-800 mt-2">Engenharia de Dados e Limpeza</h3>
-                    <p class="text-sm text-slate-600 mt-1">Resolução do problema de estouro de memória RAM com DuckDB,
-                        remoção de registros nulos/infinitos e aplicação da deduplicação global gerando o arquivo <code
-                            class="text-xs bg-slate-100 p-1 rounded">dataset_global_deduplicado.parquet</code>.</p>
-                </div>
-                <div>
-                    <span class="text-xs font-bold bg-indigo-100 text-indigo-800 px-2.5 py-1 rounded">Marco Final</span>
-                    <h3 class="text-lg font-bold text-slate-800 mt-2">Validação, Auditoria e Consolidação de Modelos
-                    </h3>
-                    <p class="text-sm text-slate-600 mt-1">Treinamento comparativo entre Regressão Logística e Random
-                        Forest (sementes 42, 123 e 199) sobre 69 features numéricas com partição temporal e gaps.
-                        Auditoria multiclasse comprovando que 27,35% das linhas de <em>Infiltration</em> no treino
-                        colidem exatamente com vetores <em>Benign</em>.
+        <section>
+            <h2><span class="num">08.</span> Conclusão</h2>
+            <p>A baixa detecção da classe <em>Infiltration</em> possui duas componentes principais:</p>
+            <div class="grid-3">
+                <div class="card">
+                    <h4>1. Sobreposição Exata de Assinaturas</h4>
+                    <p>27,35% dos registros de <em>Infiltration</em> no conjunto de treino possuem uma réplica
+                        <em>Benign</em> numericamente idêntica nas 69 características de fluxo utilizadas pelos modelos.
                     </p>
                 </div>
-            </div>
-        </section>
-
-        <!-- 7. Conclusão -->
-        <section class="bg-white p-8 rounded-xl shadow-md border border-slate-100">
-            <h2 class="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-2">
-                <span class="text-indigo-600">07.</span> Conclusão
-            </h2>
-            <div class="space-y-4 text-slate-600">
-                <p>
-                    A baixa detecção da classe <em>Infiltration</em> possui duas componentes principais:
-                </p>
-                <div class="grid md:grid-cols-2 gap-4">
-                    <div class="bg-slate-50 p-5 rounded-lg border border-slate-200">
-                        <h3 class="font-bold text-slate-800 mb-1">1. Sobreposição Exata de Assinaturas</h3>
-                        <p class="text-sm text-slate-600">
-                            <strong>27,35%</strong> dos registros de <em>Infiltration</em> no conjunto de treino
-                            possuem uma réplica <em>Benign</em> numericamente idêntica nas 69 características de fluxo
-                            utilizadas pelos modelos.
-                        </p>
-                    </div>
-                    <div class="bg-slate-50 p-5 rounded-lg border border-slate-200">
-                        <h3 class="font-bold text-slate-800 mb-1">2. Dificuldade de Generalização</h3>
-                        <p class="text-sm text-slate-600">
-                            Observa-se queda acentuada de desempenho entre os blocos temporais, com <em>recall</em> de
-                            <strong>74,9%</strong> no treino contra apenas <strong>12,7%</strong> na validação.
-                        </p>
-                    </div>
+                <div class="card">
+                    <h4>2. Dificuldade de Generalização</h4>
+                    <p>Observa-se queda acentuada de desempenho entre os blocos temporais, com recall de 74,9% no treino
+                        contra apenas 12,7% na validação.</p>
                 </div>
-                <p class="text-sm text-slate-600">
-                    De forma consistente, a <strong>Regressão Logística</strong> (F1-macro de <strong>0,9013</strong>)
-                    também falha na identificação dessa classe, atingindo apenas <strong>8,81%</strong> de detecção.
-                    Assim, não está estabelecido se os atributos estatísticos brutos de fluxo são suficientes para
-                    detectar ataques de infiltração de maneira generalizável.
-                </p>
             </div>
+            <p>De forma consistente, a Regressão Logística (F1-macro de 0,9013) também falha na identificação dessa
+                classe, atingindo apenas 8,81% de detecção. Assim, não está estabelecido se os atributos estatísticos
+                brutos de fluxo são suficientes para detectar ataques de infiltração de maneira generalizável.</p>
         </section>
 
-    </main>
-
-    <!-- Footer -->
-    <footer class="bg-slate-900 text-slate-400 text-center py-8 mt-16 text-sm">
-        <p>Desenvolvido por Ericsson Luis Gonçalves Alves • Disciplina LIAA (2026)</p>
-    </footer>
-
+        <footer>
+            <span>Desenvolvido por <strong>Ericsson Luis Gonçalves Alves</strong> — Disciplina LIAA (2026)</span>
+            <a href="https://luisalveser.github.io/liaa-ericsson.github.io/" target="_blank"
+                rel="noopener noreferrer">luisalveser.github.io/liaa-ericsson.github.io</a>
+        </footer>
+    </div>
 </body>
 
 </html>
