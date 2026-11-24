@@ -1085,7 +1085,77 @@
         </section>
 
         <section>
-            <h2><span class="num">06.</span> Evolução do Projeto (Linha do Tempo)</h2>
+            <h2><span class="num">06.</span> Comparativo com a Literatura (Gargalo de Infiltration)</h2>
+            <p>Análise crítica dos resultados reportados na literatura recente para a classe <em>Infiltration</em> no
+                dataset CSE-CIC-IDS2018 frente aos achados empíricos deste projeto:</p>
+
+            <div class="lit-grid">
+                <div class="lit-card">
+                    <div>
+                        <h4>Hewapathirana (2025)</h4>
+                        <div class="lit-metric">Recall: 34% (SAE) / 21% (Spark)</div>
+                        <span class="lit-tag">Vazamento de Dados (Data Leakage)</span>
+                        <ul>
+                            <li>Replicou amostras raras de <em>Infiltration</em> com reposição até 10.000 antes de
+                                dividir os dados.</li>
+                            <li>Com split aleatório (80/20) e sem deduplicação prévia, cópias idênticas caíram no treino
+                                e no teste.</li>
+                            <li><strong>Resultado:</strong> a rede memoriza réplicas em vez de generalizar o ataque.
+                            </li>
+                        </ul>
+                    </div>
+                    <a class="lit-link" href="https://www.mdpi.com/2624-800X/6/5/183" target="_blank"
+                        rel="noopener noreferrer">Artigo: mdpi.com/2624-800X/6/5/183 &nearr;</a>
+                </div>
+
+                <div class="lit-card">
+                    <div>
+                        <h4>Donoso et al. (2026)</h4>
+                        <div class="lit-metric">Recall: 85,3% (c/ peso) vs 1,45% (s/ peso)</div>
+                        <span class="lit-tag">Artefato de Função de Custo</span>
+                        <ul>
+                            <li>Com pesos (<code>balanced</code>), a CNN-1D atinge ~80–85% de recall, mas com Precisão
+                                de 2,44% (F1 = 0,047).</li>
+                            <li><strong>Colapso operacional:</strong> 38,10% do tráfego <em>Benigno</em> (567.889
+                                fluxos) vira falso alarme.</li>
+                            <li>Sem pesos, o recall desaba para 1,45%, provando incapacidade de separação nativa.</li>
+                        </ul>
+                    </div>
+                    <a class="lit-link" href="https://www.mdpi.com/2624-800X/6/5/183" target="_blank"
+                        rel="noopener noreferrer">Artigo: mdpi.com/2624-800X/6/5/183 &nearr;</a>
+                </div>
+
+                <div class="lit-card highlight-mine">
+                    <div>
+                        <h4>Projeto Redes Quin (Meu)</h4>
+                        <div class="lit-metric">Recall: 13,61% (RF) / 15,04% (OOB único)</div>
+                        <span class="lit-tag">Teto Teórico de Separabilidade</span>
+                        <ul>
+                            <li>54,11% de toda a classe <em>Infiltration</em> (61.593 fluxos) tem um &lsquo;gêmeo&rsquo;
+                                <em>Benign</em> 100% idêntico nas 69 variáveis.</li>
+                            <li>No treino, 79,67% das amostras de infiltração colidem exatamente com tráfego normal.
+                            </li>
+                            <li><strong>Conclusão:</strong> limite físico dos atributos do CICFlowMeter, não falha do
+                                modelo.</li>
+                        </ul>
+                    </div>
+                    <span class="lit-link" style="color:#047857;">Auditoria Empírica — Dataset Deduplicado (69
+                        Features)</span>
+                </div>
+            </div>
+
+            <h3>Referências Bibliográficas</h3>
+            <ul style="padding-left: 1.25rem; font-size: 0.9rem;">
+                <li style="margin-bottom: 0.4rem;"><strong>Donoso et al. (2026):</strong> <a
+                        href="https://www.mdpi.com/2624-800X/6/5/183" target="_blank"
+                        rel="noopener noreferrer">https://www.mdpi.com/2624-800X/6/5/183</a></li>
+                <li><strong>Hewapathirana (2025):</strong> <a href="https://www.mdpi.com/2673-9585/5/1/6"
+                        target="_blank" rel="noopener noreferrer">https://www.mdpi.com/2673-9585/5/1/6</a></li>
+            </ul>
+        </section>
+
+        <section>
+            <h2><span class="num">07.</span> Evolução do Projeto (Linha do Tempo)</h2>
             <div class="timeline">
                 <div class="timeline-item">
                     <strong>Marco Inicial — Contextualização e Coleta</strong>
@@ -1108,7 +1178,7 @@
         </section>
 
         <section>
-            <h2><span class="num">07.</span> Apresentação em Vídeo</h2>
+            <h2><span class="num">08.</span> Apresentação em Vídeo</h2>
             <p>Demonstração complementar do projeto e dos resultados obtidos no sistema NIDS:</p>
             <div class="video-wrapper">
                 <iframe src="https://www.youtube.com/embed/f_2SLlKhzNg"
@@ -1124,7 +1194,7 @@
         </section>
 
         <section>
-            <h2><span class="num">08.</span> Conclusão</h2>
+            <h2><span class="num">09.</span> Conclusão</h2>
             <p>A baixa detecção da classe <em>Infiltration</em> possui duas componentes principais:</p>
             <div class="grid-3">
                 <div class="card">
